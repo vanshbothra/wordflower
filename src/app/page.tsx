@@ -24,6 +24,7 @@ export default function WordflowerGame() {
   // Game state management
   const [gameState, setGameState] = useState<'not-started' | 'playing' | 'ended'>('not-started')
   const [showStartModal, setShowStartModal] = useState(true)
+  const [showEndModal, setShowEndModal] = useState(false)
   const [timer, setTimer] = useState(0) // in seconds
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null)
 
@@ -60,16 +61,17 @@ export default function WordflowerGame() {
 
   const endGame = () => {
     setGameState('ended')
+    setShowEndModal(true)
     if (intervalId) {
       clearInterval(intervalId)
       setIntervalId(null)
     }
-    toast.info(`Game ended! You found ${foundWords.length} words in ${formatTime(timer)}`)
   }
 
   const resetGame = () => {
     setGameState('not-started')
     setShowStartModal(true)
+    setShowEndModal(false)
     setCurrentWord("")
     setFoundWords([])
     setHintLevel(0)
@@ -211,12 +213,9 @@ export default function WordflowerGame() {
               )}
               {gameState === 'ended' && (
                 <div className="text-right">
-                  <div className="text-lg text-muted-foreground mb-2">
-                    Final Time: {formatTime(timer)}
+                  <div className="text-lg text-muted-foreground">
+                    Game Ended - {formatTime(timer)}
                   </div>
-                  <Button onClick={resetGame} size="sm">
-                    Play Again
-                  </Button>
                 </div>
               )}
             </div>
@@ -271,6 +270,67 @@ export default function WordflowerGame() {
           <DialogFooter>
             <Button onClick={startGame} size="lg" className="w-full">
               Start Game
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* End Game Modal */}
+      <Dialog open={showEndModal} onOpenChange={setShowEndModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>🎉 Game Complete!</DialogTitle>
+            <DialogDescription>
+              Congratulations on completing your word-finding adventure!
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="text-2xl font-bold text-primary">{foundWords.length}</div>
+                <div className="text-sm text-muted-foreground">Words Found</div>
+              </div>
+              <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="text-2xl font-bold text-primary">{formatTime(timer)}</div>
+                <div className="text-sm text-muted-foreground">Total Time</div>
+              </div>
+            </div>
+            
+            <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div className="text-2xl font-bold text-primary">
+                {validWords.length > 0 ? Math.round((foundWords.length / validWords.length) * 100) : 0}%
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Completion Rate ({foundWords.length} of {validWords.length} words)
+              </div>
+            </div>
+
+            {foundWords.length > 0 && (
+              <div className="mt-4">
+                <h4 className="font-semibold mb-2">Words You Found:</h4>
+                <div className="max-h-32 overflow-y-auto bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                  <div className="flex flex-wrap gap-2">
+                    {foundWords.map((word, index) => (
+                      <span 
+                        key={index}
+                        className="px-2 py-1 bg-primary/10 text-primary rounded text-sm"
+                      >
+                        {word}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button onClick={() => setShowEndModal(false)} variant="outline">
+              Close
+            </Button>
+            <Button onClick={resetGame} size="lg">
+              Play Again
             </Button>
           </DialogFooter>
         </DialogContent>
