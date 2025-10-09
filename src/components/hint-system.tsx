@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Lightbulb, SkipForward } from "lucide-react"
@@ -15,78 +16,51 @@ interface HintSystemProps {
 }
 
 export function HintSystem({ currentHintWord, hintLevel, onRequestHint, onSkipWord, foundWords }: HintSystemProps) {
+  const [expandedHintLevel, setExpandedHintLevel] = useState<number | null>(0)
+
+  // Sync expanded card with current hint level
+  useEffect(() => {
+    if (hintLevel > 0) {
+      setExpandedHintLevel(hintLevel)
+    } else {
+      setExpandedHintLevel(null)
+    }
+  }, [hintLevel, currentHintWord])
+
+
+
   if (!currentHintWord) {
-    return null
+    return (
+      <Card className="p-6 mb-6">
+        <div className="text-center py-8">
+          <p className="text-muted-foreground animate-pulse">Loading hint system…</p>
+        </div>
+      </Card>
+    )
   }
 
-  // Check if current hint word is already found
-  const isWordFound = foundWords.includes(currentHintWord.word)
 
-  const getPreviousHints = () => {
-    const hints = []
+  const isWordFound = currentHintWord
+    ? foundWords.some((w) => w.trim().toLowerCase() === currentHintWord.word.trim().toLowerCase())
+    : false
 
-    if (hintLevel >= 2) {
-      hints.push({
-        level: 1,
-        label: "Related",
-        content: currentHintWord.relatedWord,
-      })
-    }
-    if (hintLevel >= 3) {
-      hints.push({
-        level: 2,
-        label: "Synonym",
-        content: currentHintWord.synonym,
-      })
-    }
-    if (hintLevel >= 4) {
-      hints.push({
-        level: 3,
-        label: "Phrase",
-        content: `"${currentHintWord.phrase}"`,
-        isItalic: true,
-      })
-    }
+    
 
-    return hints
+  const hints = [
+    { level: 1, label: "Related Word", content: currentHintWord.relatedWord },
+    { level: 2, label: "Synonym", content: currentHintWord.synonym },
+    { level: 3, label: "Phrase", content: `"${currentHintWord.phrase}"`, isItalic: true },
+    { level: 4, label: "Fill in the blank", content: currentHintWord.fillInBlank, isMono: true },
+  ].filter((h) => h.level <= hintLevel)
+
+  const handleHintClick = (level: number) => {
+    setExpandedHintLevel(level)
   }
+  const currentExpandedHint = expandedHintLevel
+    ? hints.find((h) => h.level === expandedHintLevel)
+    : hints[hints.length - 1]
 
-  const getCurrentHint = () => {
-    if (hintLevel === 1) {
-      return {
-        level: 1,
-        label: "Related Word",
-        content: currentHintWord.relatedWord,
-      }
-    }
-    if (hintLevel === 2) {
-      return {
-        level: 2,
-        label: "Synonym",
-        content: currentHintWord.synonym,
-      }
-    }
-    if (hintLevel === 3) {
-      return {
-        level: 3,
-        label: "Phrase",
-        content: `"${currentHintWord.phrase}"`,
-        isItalic: true,
-      }
-    }
-    if (hintLevel === 4) {
-      return {
-        level: 4,
-        label: "Fill in the blank",
-        content: currentHintWord.fillInBlank,
-        isMono: true,
-      }
-    }
-    return null
-  }
-
-  const previousHints = getPreviousHints()
-  const currentHint = getCurrentHint()
+  const previousHints = hints.filter((h) => h.level !== currentExpandedHint?.level)
 
   return (
     <Card className="p-6 mb-6">
@@ -100,7 +74,7 @@ export function HintSystem({ currentHintWord, hintLevel, onRequestHint, onSkipWo
 
       {isWordFound ? (
         <div className="text-center py-8 mb-4">
-          <p className="text-success font-semibold text-lg mb-2">✓ Word Found!</p>
+          <p className="text-success font-semibold text-lg mb-2">Hint Word Found!</p>
           <p className="text-muted-foreground">Click "Next Word" for the next hint</p>
         </div>
       ) : hintLevel === 0 ? (
@@ -109,11 +83,15 @@ export function HintSystem({ currentHintWord, hintLevel, onRequestHint, onSkipWo
         </div>
       ) : (
         <div className="flex gap-4 mb-4 min-h-[200px]">
-          {/* Previous hints - small cards stacked vertically on the left */}
+          {/* Previous hints */}
           {previousHints.length > 0 && (
             <div className="flex flex-col gap-2 w-32">
               {previousHints.map((hint) => (
-                <Card key={hint.level} className="p-2 border bg-muted/50">
+                <Card
+                  key={hint.level}
+                  className="p-2 border bg-muted/50 cursor-pointer hover:bg-muted/70"
+                  onClick={() => handleHintClick(hint.level)}
+                >
                   <p className="text-[10px] text-muted-foreground mb-1 font-medium">{hint.label}</p>
                   <p className={cn("text-xs font-medium text-foreground line-clamp-2", hint.isItalic && "italic")}>
                     {hint.content}
@@ -123,20 +101,20 @@ export function HintSystem({ currentHintWord, hintLevel, onRequestHint, onSkipWo
             </div>
           )}
 
-          {/* Current hint - large and centered */}
-          {currentHint && (
+          {/* Expanded/current hint */}
+          {currentExpandedHint && (
             <Card className="flex-1 p-6 border-2 border-primary bg-primary/5 flex flex-col items-center justify-center">
               <p className="text-sm text-muted-foreground mb-3 font-medium">
-                Level {currentHint.level}: {currentHint.label}
+                Level {currentExpandedHint.level}: {currentExpandedHint.label}
               </p>
               <p
                 className={cn(
                   "text-2xl font-bold text-foreground text-center",
-                  currentHint.isItalic && "italic text-xl",
-                  currentHint.isMono && "font-mono text-3xl tracking-widest",
+                  currentExpandedHint.isItalic && "italic text-xl",
+                  currentExpandedHint.isMono && "font-mono text-3xl tracking-widest"
                 )}
               >
-                {currentHint.content}
+                {currentExpandedHint.content}
               </p>
             </Card>
           )}
