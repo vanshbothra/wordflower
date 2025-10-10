@@ -12,6 +12,23 @@ import { fetchWordHints } from "@/lib/mw-api"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 
+// Game persistence interface
+interface SavedGameState {
+  gameId: string
+  foundWords: string[]
+  currentHintWordIndex: number
+  hintLevel: number
+  timer: number
+  gameState: 'not-started' | 'playing' | 'ended'
+  currentWord: string
+  savedAt: number
+}
+
+// Generate unique game ID
+const generateGameId = () => {
+  return `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+}
+
 export default function WordflowerGame() {
   const [currentWord, setCurrentWord] = useState("")
   const [foundWords, setFoundWords] = useState<string[]>([])
@@ -27,12 +44,58 @@ export default function WordflowerGame() {
   const [showEndModal, setShowEndModal] = useState(false)
   const [timer, setTimer] = useState(0) // in seconds
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null)
+  const [gameId, setGameId] = useState<string>("")
+  const [isTabVisible, setIsTabVisible] = useState(true)
+  const [savedGame, setSavedGame] = useState<SavedGameState | null>(null)
 
   const currentHintWord = hintWords[currentHintWordIndex] || null
 
-  // Timer functionality
+  // localStorage functions
+  const saveGameToStorage = useCallback(() => {
+    if (typeof window === "undefined" || !gameId || gameState === 'not-started') return
+    
+    const gameData: SavedGameState = {
+      gameId,
+      foundWords,
+      currentHintWordIndex,
+      hintLevel,
+      timer,
+      gameState,
+      currentWord,
+      savedAt: Date.now()
+    }
+    
+    try {
+      localStorage.setItem('wordflower_game', JSON.stringify(gameData))
+    } catch (error) {
+      console.error('Failed to save game:', error)
+    }
+  }, [gameId, foundWords, currentHintWordIndex, hintLevel, timer, gameState, currentWord])
+
+  const loadGameFromStorage = useCallback((): SavedGameState | null => {
+    if (typeof window === "undefined") return null
+    
+    try {
+      const saved = localStorage.getItem('wordflower_game')
+      if (saved) {
+        return JSON.parse(saved)
+      }
+    } catch (error) {
+      console.error('Failed to load game:', error)
+      localStorage.removeItem('wordflower_game')
+    }
+    return null
+  }, [])
+
+  const clearSavedGame = useCallback(() => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem('wordflower_game')
+    }
+  }, [])
+
+  // Timer functionality with tab visibility support
   useEffect(() => {
-    if (gameState === 'playing') {
+    if (gameState === 'playing' && isTabVisible) {
       const id = setInterval(() => {
         setTimer((prev) => prev + 1)
       }, 1000)
@@ -42,7 +105,34 @@ export default function WordflowerGame() {
       clearInterval(intervalId)
       setIntervalId(null)
     }
-  }, [gameState])
+  }, [gameState, isTabVisible])
+
+  // Tab visibility handling
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsTabVisible(!document.hidden)
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
+  // Save game on beforeunload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      saveGameToStorage()
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [saveGameToStorage])
+
+  // Auto-save game state periodically and on state changes
+  useEffect(() => {
+    if (gameState === 'playing') {
+      saveGameToStorage()
+    }
+  }, [foundWords, currentHintWordIndex, hintLevel, timer, saveGameToStorage, gameState])
 
   // Format timer display
   const formatTime = (seconds: number) => {
@@ -53,15 +143,19 @@ export default function WordflowerGame() {
 
   // Game control functions
   const startGame = () => {
+    const newGameId = generateGameId()
+    setGameId(newGameId)
     setGameState('playing')
     setShowStartModal(false)
     setTimer(0)
+    clearSavedGame() // Clear any previous saved game
     toast.success("Game started! Good luck! 🌻")
   }
 
   const endGame = () => {
     setGameState('ended')
     setShowEndModal(true)
+    clearSavedGame() // Clear saved game when officially ended
     if (intervalId) {
       clearInterval(intervalId)
       setIntervalId(null)
@@ -77,9 +171,26 @@ export default function WordflowerGame() {
     setHintLevel(0)
     setCurrentHintWordIndex(0)
     setTimer(0)
+    setGameId("")
+    clearSavedGame()
     if (intervalId) {
       clearInterval(intervalId)
       setIntervalId(null)
+    }
+  }
+
+  const resumeGame = (savedGame: SavedGameState) => {
+    setGameId(savedGame.gameId)
+    setFoundWords(savedGame.foundWords)
+    setCurrentHintWordIndex(savedGame.currentHintWordIndex)
+    setHintLevel(savedGame.hintLevel)
+    setTimer(savedGame.timer)
+    setGameState(savedGame.gameState)
+    setCurrentWord(savedGame.currentWord)
+    setShowStartModal(false)
+    
+    if (savedGame.gameState === 'playing') {
+      toast.success("Game resumed! 🌻")
     }
   }
 
@@ -124,6 +235,20 @@ export default function WordflowerGame() {
     }
 
     loadWords()
+  }, [])
+
+  // Check for saved game on mount
+  useEffect(() => {
+    const saved = loadGameFromStorage()
+    if (saved && saved.gameState === 'playing') {
+      // Check if saved game is not too old (e.g., within 24 hours)
+      const hoursSinceLastSave = (Date.now() - saved.savedAt) / (1000 * 60 * 60)
+      if (hoursSinceLastSave < 24) {
+        setSavedGame(saved)
+      } else {
+        clearSavedGame() // Clear old saved games
+      }
+    }
   }, [])
 
   const handleLetterClick = (letter: string) => setCurrentWord((prev) => prev + letter)
@@ -205,6 +330,9 @@ export default function WordflowerGame() {
                 <div className="text-right">
                   <div className="text-2xl font-mono font-bold text-foreground">
                     {formatTime(timer)}
+                    {!isTabVisible && (
+                      <span className="text-sm text-orange-500 block">⏸️ Paused</span>
+                    )}
                   </div>
                   <Button onClick={endGame} variant="destructive" size="sm">
                     End Game
@@ -264,13 +392,28 @@ export default function WordflowerGame() {
             <DialogDescription>
               Create as many words as you can using the available letters. 
               Each word must contain the center letter and be at least 4 letters long.
-              Ready to start your word adventure?
+              {savedGame && (
+                <span className="block mt-2 text-primary font-medium">
+                  Found a saved game with {savedGame.foundWords.length} words and {formatTime(savedGame.timer)} played!
+                </span>
+              )}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button onClick={startGame} size="lg" className="w-full">
-              Start Game
-            </Button>
+          <DialogFooter className="gap-2">
+            {savedGame ? (
+              <>
+                <Button onClick={startGame} variant="outline" className="flex-1">
+                  New Game
+                </Button>
+                <Button onClick={() => resumeGame(savedGame)} size="lg" className="flex-1">
+                  Resume Game
+                </Button>
+              </>
+            ) : (
+              <Button onClick={startGame} size="lg" className="w-full">
+                Start Game
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
