@@ -50,6 +50,48 @@ export default function WordflowerGame() {
 
   const currentHintWord = hintWords[currentHintWordIndex] || null
 
+  // Analytics logging function
+  const logAnalyticsEvent = useCallback(async (eventType: string, eventData: any = {}) => {
+    if (!gameId) return
+
+    try {
+      await fetch('/api/analytics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gameId,
+          eventType,
+          eventData
+        })
+      })
+    } catch (error) {
+      console.error('Failed to log analytics event:', error)
+    }
+  }, [gameId])
+
+  // Update game metadata in analytics
+  const updateGameMetadata = useCallback(async () => {
+    if (!gameId) return
+
+    try {
+      await fetch('/api/analytics', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gameId,
+          gameMetadata: {
+            totalWords: validWords.length,
+            wordsFound: foundWords.length,
+            totalTime: timer,
+            gameState
+          }
+        })
+      })
+    } catch (error) {
+      console.error('Failed to update game metadata:', error)
+    }
+  }, [gameId, validWords.length, foundWords.length, timer, gameState])
+
   // localStorage functions
   const saveGameToStorage = useCallback(() => {
     if (typeof window === "undefined" || !gameId || gameState === 'not-started') return
@@ -110,12 +152,22 @@ export default function WordflowerGame() {
   // Tab visibility handling
   useEffect(() => {
     const handleVisibilityChange = () => {
-      setIsTabVisible(!document.hidden)
+      const newVisibility = !document.hidden
+      setIsTabVisible(newVisibility)
+      
+      // Log tab visibility changes during active gameplay
+      if (gameState === 'playing') {
+        logAnalyticsEvent('tab_visibility_changed', {
+          isVisible: newVisibility,
+          currentTime: timer,
+          wordsFound: foundWords.length
+        })
+      }
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [])
+  }, [gameState, timer, foundWords.length, logAnalyticsEvent])
 
   // Save game on beforeunload
   useEffect(() => {
@@ -131,8 +183,9 @@ export default function WordflowerGame() {
   useEffect(() => {
     if (gameState === 'playing') {
       saveGameToStorage()
+      updateGameMetadata() // Also update analytics metadata
     }
-  }, [foundWords, currentHintWordIndex, hintLevel, timer, saveGameToStorage, gameState])
+  }, [foundWords, currentHintWordIndex, hintLevel, timer, saveGameToStorage, gameState, updateGameMetadata])
 
   // Format timer display
   const formatTime = (seconds: number) => {
@@ -149,6 +202,16 @@ export default function WordflowerGame() {
     setShowStartModal(false)
     setTimer(0)
     clearSavedGame() // Clear any previous saved game
+    
+    // Log game start event
+    setTimeout(() => {
+      logAnalyticsEvent('game_started', {
+        centerLetter: GAME_DATA.centerLetter,
+        outerLetters: GAME_DATA.outerLetters,
+        totalWordsAvailable: validWords.length
+      })
+    }, 100)
+    
     toast.success("Game started! Good luck! 🌻")
   }
 
@@ -156,6 +219,14 @@ export default function WordflowerGame() {
     setGameState('ended')
     setShowEndModal(true)
     clearSavedGame() // Clear saved game when officially ended
+    
+    // Log game end event
+    logAnalyticsEvent('game_ended', {
+      finalWordsFound: foundWords.length,
+      finalTime: timer,
+      completionRate: validWords.length > 0 ? (foundWords.length / validWords.length) * 100 : 0
+    })
+    
     if (intervalId) {
       clearInterval(intervalId)
       setIntervalId(null)
@@ -188,6 +259,13 @@ export default function WordflowerGame() {
     setGameState(savedGame.gameState)
     setCurrentWord(savedGame.currentWord)
     setShowStartModal(false)
+    
+    // Log game resume event
+    logAnalyticsEvent('game_resumed', {
+      resumedWordsFound: savedGame.foundWords.length,
+      resumedTime: savedGame.timer,
+      timeSinceLastSave: Date.now() - savedGame.savedAt
+    })
     
     if (savedGame.gameState === 'playing') {
       toast.success("Game resumed! 🌻")
@@ -262,44 +340,108 @@ export default function WordflowerGame() {
     }
 
     if (currentWord.length < 4) {
+      // Log short word attempt
+      logAnalyticsEvent('word_submission_failed', {
+        reason: 'too_short',
+        attemptedWord: currentWord,
+        wordLength: currentWord.length,
+        currentTime: timer
+      })
       toast.error("Word too short")
       return
     }
 
     const upperWord = currentWord.toLowerCase()
+    
     if (foundWords.includes(upperWord)) {
+      // Log duplicate word attempt
+      logAnalyticsEvent('word_submission_failed', {
+        reason: 'already_found',
+        attemptedWord: upperWord,
+        currentTime: timer
+      })
       toast.error("Word already found")
       return
     }
+    
     if (!isValidWord(upperWord, GAME_DATA.centerLetter, GAME_DATA.outerLetters)) {
+      // Log invalid word attempt
+      logAnalyticsEvent('word_submission_failed', {
+        reason: 'invalid_composition',
+        attemptedWord: upperWord,
+        centerLetter: GAME_DATA.centerLetter,
+        outerLetters: GAME_DATA.outerLetters,
+        currentTime: timer
+      })
       toast.error("Word does not exist")
       return
     }
 
     if (validWords.includes(upperWord)) {
       setFoundWords((prev) => [...prev, upperWord])
+      
+      // Log successful word submission
+      logAnalyticsEvent('word_found', {
+        word: upperWord,
+        wordLength: upperWord.length,
+        totalWordsFound: foundWords.length + 1,
+        currentTime: timer,
+        completionRate: ((foundWords.length + 1) / validWords.length) * 100
+      })
+      
       const encouragements = ["Great job!", "Well done!", "Excellent!", "Amazing!", "Fantastic!"]
       toast.success(`${encouragements[Math.floor(Math.random() * encouragements.length)]} ✓`)
       setCurrentWord("")
     } else {
+      // Log word not in word list
+      logAnalyticsEvent('word_submission_failed', {
+        reason: 'not_in_wordlist',
+        attemptedWord: upperWord,
+        currentTime: timer
+      })
       toast.error("Word not valid")
     }
-  }, [currentWord, foundWords, validWords, gameState])
+  }, [currentWord, foundWords, validWords, gameState, timer, logAnalyticsEvent])
 
   const handleRequestHint = () => {
-    if (hintLevel < 4) setHintLevel((prev) => prev + 1)
+    if (hintLevel < 4) {
+      const newHintLevel = hintLevel + 1
+      setHintLevel(newHintLevel)
+      
+      // Log hint request
+      logAnalyticsEvent('hint_requested', {
+        hintLevel: newHintLevel,
+        targetWord: currentHintWord?.word || 'unknown',
+        currentTime: timer,
+        wordsFoundSoFar: foundWords.length
+      })
+    }
   }
 
   const handleSkipWord = () => {
     if (!hintWords.length) return
+    
+    const oldWordIndex = currentHintWordIndex
+    const oldWord = currentHintWord?.word || 'unknown'
+    
     let nextIndex = (currentHintWordIndex + 1) % hintWords.length
     let attempts = 0
     while (foundWords.includes(hintWords[nextIndex]?.word) && attempts < hintWords.length) {
       nextIndex = (nextIndex + 1) % hintWords.length
       attempts++
     }
+    
     setCurrentHintWordIndex(nextIndex)
-    setHintLevel(1) 
+    setHintLevel(1)
+    
+    // Log word skip
+    logAnalyticsEvent('hint_word_skipped', {
+      skippedWord: oldWord,
+      previousHintLevel: hintLevel,
+      newTargetWord: hintWords[nextIndex]?.word || 'unknown',
+      currentTime: timer,
+      wordsFoundSoFar: foundWords.length
+    })
   }
 
 
