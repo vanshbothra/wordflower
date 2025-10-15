@@ -74,6 +74,7 @@ export default function WordflowerGame() {
     if (!gameId) return
 
     try {
+      // Use a ref to get current timer value or pass it as parameter      
       await fetch('/api/analytics', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -91,6 +92,29 @@ export default function WordflowerGame() {
       console.error('Failed to update game metadata:', error)
     }
   }, [gameId, validWords.length, foundWords.length, timer, gameState])
+
+  // Helper function to update metadata with current timer value
+  // const updateGameMetadataWithCurrentTime = useCallback(async () => {
+  //   if (!gameId) return
+
+  //   try {
+  //     await fetch('/api/analytics', {
+  //       method: 'PATCH',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({
+  //         gameId,
+  //         gameMetadata: {
+  //           totalWords: validWords.length,
+  //           wordsFound: foundWords.length,
+  //           totalTime: timer,
+  //           gameState
+  //         }
+  //       })
+  //     })
+  //   } catch (error) {
+  //     console.error('Failed to update game metadata:', error)
+  //   }
+  // }, [gameId, validWords.length, foundWords.length, timer, gameState])
 
   // localStorage functions
   const saveGameToStorage = useCallback(() => {
@@ -179,13 +203,30 @@ export default function WordflowerGame() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [saveGameToStorage])
 
-  // Auto-save game state periodically and on state changes
+  // Auto-save game state and update metadata on specific events
   useEffect(() => {
     if (gameState === 'playing') {
       saveGameToStorage()
-      updateGameMetadata() // Also update analytics metadata
+      // updateGameMetadata()
     }
-  }, [foundWords, currentHintWordIndex, hintLevel, timer, saveGameToStorage, gameState, updateGameMetadata])
+  }, [foundWords, currentHintWordIndex, hintLevel, saveGameToStorage, timer, gameState])
+
+  // Periodic metadata update every 30 seconds during gameplay
+  useEffect(() => {
+    let metadataIntervalId: NodeJS.Timeout | null = null
+    
+    if (gameState === 'playing') {
+      metadataIntervalId = setInterval(() => {
+        updateGameMetadata()
+      }, 30000) // Update every 30 seconds
+    }
+
+    return () => {
+      if (metadataIntervalId) {
+        clearInterval(metadataIntervalId)
+      }
+    }
+  }, [gameState, updateGameMetadata])
 
   // Format timer display
   const formatTime = (seconds: number) => {
@@ -227,6 +268,9 @@ export default function WordflowerGame() {
       completionRate: validWords.length > 0 ? (foundWords.length / validWords.length) * 100 : 0
     })
     
+    // Final metadata update with current time
+    updateGameMetadata()
+    
     if (intervalId) {
       clearInterval(intervalId)
       setIntervalId(null)
@@ -260,12 +304,14 @@ export default function WordflowerGame() {
     setCurrentWord(savedGame.currentWord)
     setShowStartModal(false)
     
-    // Log game resume event
-    logAnalyticsEvent('game_resumed', {
-      resumedWordsFound: savedGame.foundWords.length,
-      resumedTime: savedGame.timer,
-      timeSinceLastSave: Date.now() - savedGame.savedAt
-    })
+    // Log game resume event with a slight delay to ensure gameId is set
+    setTimeout(() => {
+      logAnalyticsEvent('game_resumed', {
+        resumedWordsFound: savedGame.foundWords.length,
+        resumedTime: savedGame.timer,
+        timeSinceLastSave: Date.now() - savedGame.savedAt
+      })
+    }, 100)
     
     if (savedGame.gameState === 'playing') {
       toast.success("Game resumed! 🌻")

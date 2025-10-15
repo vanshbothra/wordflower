@@ -112,7 +112,25 @@ export async function GET(request: NextRequest) {
 // Update game metadata
 export async function PATCH(request: NextRequest) {
   try {
-    const body = await request.json()
+    // Check if request has a body
+    const contentType = request.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      return NextResponse.json(
+        { error: 'Content-Type must be application/json' },
+        { status: 400 }
+      )
+    }
+
+    const text = await request.text()
+    if (!text.trim()) {
+      return NextResponse.json(
+        { error: 'Request body is empty' },
+        { status: 400 }
+      )
+    }
+
+    const body = JSON.parse(text)
+    console.log('PATCH request body:', body)
     const { gameId, gameMetadata } = body
 
     if (!gameId || !gameMetadata) {
