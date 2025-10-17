@@ -47,7 +47,7 @@ export function HintSystem({ currentHintWord, hintLevel, onRequestHint, onSkipWo
     
 
   const hints = [
-    { level: 1, label: "Related Word", content: currentHintWord.relatedWord },
+    { level: 1, label: "Definition", content: currentHintWord.relatedWord },
     { level: 2, label: "Synonym", content: currentHintWord.synonym },
     { level: 3, label: "Phrase", content: `"${currentHintWord.phrase}"`, isItalic: true },
     { level: 4, label: "Fill in the blank", content: currentHintWord.fillInBlank, isMono: true },
