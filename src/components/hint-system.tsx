@@ -60,7 +60,7 @@ export function HintSystem({ currentHintWord, hintLevel, onRequestHint, onSkipWo
   const previousHints = hints.filter((h) => h.level !== currentExpandedHint?.level)
 
   return (
-    <Card className="p-6 mb-6">
+    <>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <Lightbulb className="h-5 w-5 text-primary" />
@@ -133,17 +133,20 @@ export function HintSystem({ currentHintWord, hintLevel, onRequestHint, onSkipWo
       )}
 
       <div className="flex gap-3">
-        <Button onClick={onPreviousWord} variant="outline" className="flex-1 bg-transparent">
+        <Button onClick={onPreviousWord} variant="outline" className="flex-1 bg-transparent"
+        disabled={hintLevel===0}
+        >
           <SkipBack className="h-4 w-4 mr-2" />
         </Button>
         <Button onClick={onRequestHint} disabled={hintLevel >= 4 || isWordFound} className="flex-1" variant="default">
           <Lightbulb className="h-4 w-4 mr-2" />
           {hintLevel === 0 ? "Get Hint" : "Next Hint"}
         </Button>
-        <Button onClick={onSkipWord} variant="outline" className="flex-1 bg-transparent">
+        <Button onClick={onSkipWord} variant="outline" className="flex-1 bg-transparent"
+        disabled={hintLevel===0}>
           <SkipForward className="h-4 w-4 mr-2" />
         </Button>
       </div>
-    </Card>
+  </>
   )
 }
