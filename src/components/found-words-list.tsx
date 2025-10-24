@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card"
 import { CheckCircle2 } from "lucide-react"
 
-interface FoundWordsListProps {
+export interface FoundWordsListProps {
   foundWords: string[]
   totalWords: number
 }
@@ -24,11 +24,14 @@ export function FoundWordsList({ foundWords, totalWords }: FoundWordsListProps) 
       {foundWords.length === 0 ? (
         <p className="text-center text-muted-foreground py-8">No words found yet. Start playing!</p>
       ) : (
-        <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-wrap gap-2">
           {foundWords.map((word, index) => (
-            <div key={index} className="px-3 py-2 bg-success/10 text-success rounded-md text-center font-medium">
+            <span
+              key={index}
+              className={'px-2 py-1 rounded text-sm bg-gray-200 dark:bg-gray-700 text-muted-foreground'}
+            >
               {word}
-            </div>
+            </span>
           ))}
         </div>
       )}

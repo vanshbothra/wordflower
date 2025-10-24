@@ -130,7 +130,6 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = JSON.parse(text)
-    console.log('PATCH request body:', body)
     const { gameId, gameMetadata } = body
 
     if (!gameId || !gameMetadata) {
