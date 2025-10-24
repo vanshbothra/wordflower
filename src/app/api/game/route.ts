@@ -3,7 +3,6 @@ import data from '@/data/WordData.json'
 
 export async function POST(request: Request) {
   try {
-    console.log("length", JSON.parse(JSON.stringify(data)).length)
     const randomId = data[Math.floor(Math.random() * data.length)].id
 
     const gameData = data.find(g => g.id === randomId)
@@ -47,7 +46,6 @@ export async function PUT(request: Request) {
   if (!game) {
     return NextResponse.json({ error: 'Game not found' }, { status: 404 })
   }
-  console.log('game', game)
 
   const lowerWord = word.toLowerCase()
   const isValid = game.words.map(w => w.toLowerCase()).includes(lowerWord)
@@ -74,8 +72,6 @@ export async function GET(request: Request) {
   if (!game) {
     return NextResponse.json({ error: 'Game not found' }, { status: 404 })
   }
-
-  console.log('words',game.words)
 
   return NextResponse.json(game.words)
 }

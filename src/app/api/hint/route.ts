@@ -7,13 +7,12 @@ export async function POST(request: Request) {
   try {
 
     const { gameId } = await request.json()
-    console.log(gameId)
-    console.log('data', data[0])
+
 
     if (!gameId) return NextResponse.json({ error: "Missing gameId" }, { status: 400 })
 
     const game = data.find(g => g.id === +gameId)
-    console.log(game)
+
     if (!game) return NextResponse.json({ error: "Game not found" }, { status: 404 })
 
     const allWords = Array.from(game.words)
