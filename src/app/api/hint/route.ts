@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { fetchWordHints } from "@/lib/mw-api"
-import { activeGames } from "@/lib/gameData" 
 import data from '@/data/WordData.json'
 
 export async function POST(request: Request) {
