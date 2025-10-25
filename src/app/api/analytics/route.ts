@@ -9,8 +9,8 @@ interface AnalyticsEvent {
   timestamp: Date
 }
 
-// Game analytics document interface
-interface GameAnalytics {
+// Game session interface
+interface GameSession {
   gameId: string
   createdAt: Date
   updatedAt: Date
@@ -23,14 +23,22 @@ interface GameAnalytics {
   }
 }
 
+// User analytics document interface (new structure)
+interface UserAnalytics {
+  userId: string
+  createdAt: Date
+  updatedAt: Date
+  gameSessions: GameSession[]
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { gameId, eventType, eventData } = body
+    const { userId, gameId, eventType, eventData } = body
 
-    if (!gameId || !eventType) {
+    if (!userId || !gameId || !eventType) {
       return NextResponse.json(
-        { error: 'Missing required fields: gameId and eventType' },
+        { error: 'Missing required fields: userId, gameId and eventType' },
         { status: 400 }
       )
     }
@@ -44,27 +52,61 @@ export async function POST(request: NextRequest) {
       timestamp: new Date()
     }
 
-    // Try to find existing game analytics document
-    const existingGame = await collection.findOne({ gameId })
+    // Try to find existing user analytics document
+    const existingUser = await collection.findOne({ userId })
 
-    if (existingGame) {
-      // Update existing document by adding the new event
-      await collection.updateOne(
-        { gameId },
-        {
-          $push: { events: analyticsEvent } as any,
-          $set: { updatedAt: new Date() }
+    if (existingUser) {
+      // Check if game session already exists for this user
+      const existingGameSessionIndex = existingUser.gameSessions?.findIndex(
+        (session: GameSession) => session.gameId === gameId
+      ) ?? -1
+
+      if (existingGameSessionIndex >= 0) {
+        // Update existing game session by adding the new event
+        await collection.updateOne(
+          { userId },
+          {
+            $push: { [`gameSessions.${existingGameSessionIndex}.events`]: analyticsEvent } as any,
+            $set: { 
+              updatedAt: new Date(),
+              [`gameSessions.${existingGameSessionIndex}.updatedAt`]: new Date()
+            }
+          }
+        )
+      } else {
+        // Create new game session for existing user
+        const newGameSession: GameSession = {
+          gameId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          events: [analyticsEvent]
         }
-      )
+        
+        await collection.updateOne(
+          { userId },
+          {
+            $push: { gameSessions: newGameSession } as any,
+            $set: { updatedAt: new Date() }
+          }
+        )
+      }
     } else {
-      // Create new game analytics document
-      const newGameAnalytics: GameAnalytics = {
+      // Create new user analytics document with first game session
+      const newGameSession: GameSession = {
         gameId,
         createdAt: new Date(),
         updatedAt: new Date(),
         events: [analyticsEvent]
       }
-      await collection.insertOne(newGameAnalytics as any)
+
+      const newUserAnalytics: UserAnalytics = {
+        userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        gameSessions: [newGameSession]
+      }
+      
+      await collection.insertOne(newUserAnalytics as any)
     }
 
     return NextResponse.json({ success: true, eventLogged: analyticsEvent })
@@ -80,26 +122,44 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('userId')
     const gameId = searchParams.get('gameId')
 
-    if (!gameId) {
+    if (!userId) {
       return NextResponse.json(
-        { error: 'Missing gameId parameter' },
+        { error: 'Missing userId parameter' },
         { status: 400 }
       )
     }
 
     const collection = await getCollection('wordflower_collection')
-    const gameAnalytics = await collection.findOne({ gameId })
+    const userAnalytics = await collection.findOne({ userId })
 
-    if (!gameAnalytics) {
+    if (!userAnalytics) {
       return NextResponse.json(
-        { error: 'Game analytics not found' },
+        { error: 'User analytics not found' },
         { status: 404 }
       )
     }
 
-    return NextResponse.json(gameAnalytics)
+    // If gameId is provided, return specific game session
+    if (gameId) {
+      const gameSession = userAnalytics.gameSessions?.find(
+        (session: GameSession) => session.gameId === gameId
+      )
+      
+      if (!gameSession) {
+        return NextResponse.json(
+          { error: 'Game session not found' },
+          { status: 404 }
+        )
+      }
+      
+      return NextResponse.json(gameSession)
+    }
+
+    // Return all user analytics
+    return NextResponse.json(userAnalytics)
   } catch (error) {
     console.error('Analytics retrieval error:', error)
     return NextResponse.json(
@@ -130,27 +190,38 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = JSON.parse(text)
-    const { gameId, gameMetadata } = body
+    const { userId, gameId, gameMetadata } = body
 
-    if (!gameId || !gameMetadata) {
+    if (!userId || !gameId || !gameMetadata) {
       return NextResponse.json(
-        { error: 'Missing required fields: gameId and gameMetadata' },
+        { error: 'Missing required fields: userId, gameId and gameMetadata' },
         { status: 400 }
       )
     }
 
     const collection = await getCollection('wordflower_collection')
     
-    await collection.updateOne(
-      { gameId },
+    // Find the user and update the specific game session's metadata
+    const result = await collection.updateOne(
+      { 
+        userId,
+        'gameSessions.gameId': gameId
+      },
       {
         $set: { 
-          gameMetadata,
+          'gameSessions.$.gameMetadata': gameMetadata,
+          'gameSessions.$.updatedAt': new Date(),
           updatedAt: new Date()
         }
-      },
-      { upsert: true }
+      }
     )
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        { error: 'User or game session not found' },
+        { status: 404 }
+      )
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

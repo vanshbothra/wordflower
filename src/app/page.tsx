@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef, use } from "react"
 import { Flower } from "@/components/flower"
 import { WordDisplay } from "@/components/word-display"
-import { HintSystem } from "@/components/hint-system"
+// import { HintSystem } from "@/components/hint-system"
 import { FoundWordsList } from "@/components/found-words-list"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
@@ -28,8 +28,8 @@ export interface GameData {
 interface SavedGameState {
   gameId: string
   foundWords: string[]
-  currentHintWordIndex: number
-  hintLevel: number
+  // currentHintWordIndex: number
+  // hintLevel: number
   timer: number
   gameState: 'not-started' | 'playing' | 'ended'
   currentWord: string
@@ -40,18 +40,40 @@ interface SavedGameState {
   pangramCount: number
 }
 
+// Generate unique game ID
+const generateGameId = () => {
+  return `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+}
+
+// Generate unique user ID
+const generateUserId = () => {
+  return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+}
+
+// Get or create user ID from localStorage
+const getUserId = () => {
+  if (typeof window === "undefined") return null
+  
+  let userId = localStorage.getItem('wordflower_user_id')
+  if (!userId) {
+    userId = generateUserId()
+    localStorage.setItem('wordflower_user_id', userId)
+  }
+  return userId
+}
+
 export default function WordflowerGame() {
   const isMobile = useMediaQuery("(max-width: 1025px)")
   const [currentWord, setCurrentWord] = useState("")
   const [foundWords, setFoundWords] = useState<string[]>([])
-  const [hintLevel, setHintLevel] = useState(0)
-  const [currentHintWordIndex, setCurrentHintWordIndex] = useState(0)
-  const [viewedHintsIndex, setViewedHintsIndex] = useState<number[]>([])
-  const [showHint, setShowHint] = useState(false)
+  // const [hintLevel, setHintLevel] = useState(0)
+  // const [currentHintWordIndex, setCurrentHintWordIndex] = useState(0)
+  // const [viewedHintsIndex, setViewedHintsIndex] = useState<number[]>([])
+  // const [showHint, setShowHint] = useState(false)
   const [allWords, setAllWords] = useState<string[]>([])
-
+  
   const [gameData, setGameData] = useState<GameData | null>(null)
-  const [hintWords, setHintWords] = useState<WordHints[]>([])
+  // const [hintWords, setHintWords] = useState<WordHints[]>([])
 
   // Game state management
   const [gameState, setGameState] = useState<'not-started' | 'playing' | 'ended'>('not-started')
@@ -61,18 +83,41 @@ export default function WordflowerGame() {
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null)
   const [isTabVisible, setIsTabVisible] = useState(true)
   const [savedGame, setSavedGame] = useState<SavedGameState | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  
+  const timerRef = useRef(0);
+  const wordsFoundRef = useRef(0);
+  const gameStateRef = useRef<'not-started' | 'playing' | 'ended'>('not-started');
+  // const currentHintWord = hintWords[currentHintWordIndex] || null
 
-  const currentHintWord = hintWords[currentHintWordIndex] || null
+  useEffect(() => {
+    timerRef.current = timer
+  }, [timer])
+
+  useEffect(() => {
+    wordsFoundRef.current = foundWords.length
+  }, [foundWords.length])
+
+  useEffect(() => {
+    gameStateRef.current = gameState
+  }, [gameState])
+
+  // Initialize user ID on mount
+  useEffect(() => {
+    const id = getUserId()
+    setUserId(id)
+  }, [])
 
   // Analytics logging function
   const logAnalyticsEvent = useCallback(async (eventType: string, eventData: any = {}) => {
-    if (!gameData?.gameId) return
+    if (!gameData?.gameId || !userId) return
 
     try {
       await fetch('/api/analytics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId,
           gameId: gameData.gameId,
           eventType,
           eventData
@@ -81,31 +126,31 @@ export default function WordflowerGame() {
     } catch (error) {
       console.error('Failed to log analytics event:', error)
     }
-  }, [gameData?.gameId])
+  }, [gameData?.gameId, userId])
 
   // Update game metadata in analytics
   const updateGameMetadata = useCallback(async () => {
-    if (!gameData?.gameId) return
-
+    if (!gameData?.gameId || !userId) return    
     try {
       // Use a ref to get current timer value or pass it as parameter      
       await fetch('/api/analytics', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId,
           gameId: gameData.gameId,
           gameMetadata: {
             totalWords: gameData.wordCount,
-            wordsFound: foundWords.length,
-            totalTime: timer,
-            gameState
+            wordsFound: wordsFoundRef.current,
+            totalTime: timerRef.current,
+            gameState: gameStateRef.current
           }
         })
       })
     } catch (error) {
       console.error('Failed to update game metadata:', error)
     }
-  }, [gameData?.gameId, foundWords.length, timer, gameState])
+  }, [gameData?.gameId, gameState, userId])
 
   // Helper function to update metadata with current timer value
   // const updateGameMetadataWithCurrentTime = useCallback(async () => {
@@ -137,8 +182,8 @@ export default function WordflowerGame() {
     const saveData: SavedGameState = {
       gameId: gameData.gameId,
       foundWords,
-      currentHintWordIndex,
-      hintLevel,
+      // currentHintWordIndex,
+      // hintLevel,
       timer,
       gameState,
       currentWord,
@@ -154,7 +199,7 @@ export default function WordflowerGame() {
     } catch (error) {
       console.error('Failed to save game:', error)
     }
-  }, [gameData, foundWords, currentHintWordIndex, hintLevel, timer, gameState, currentWord])
+  }, [gameData, foundWords, /* currentHintWordIndex, hintLevel, */ timer, gameState, currentWord])
 
   const loadGameFromStorage = useCallback((): SavedGameState | null => {
     if (typeof window === "undefined") return null
@@ -226,14 +271,14 @@ export default function WordflowerGame() {
       saveGameToStorage()
       // updateGameMetadata()
     }
-  }, [foundWords, currentHintWordIndex, hintLevel, saveGameToStorage, timer, gameState])
+  }, [foundWords, /* currentHintWordIndex, hintLevel, */ saveGameToStorage, timer, gameState])
 
   // Periodic metadata update every 30 seconds during gameplay
   useEffect(() => {
     let metadataIntervalId: NodeJS.Timeout | null = null
 
     if (gameState === 'playing') {
-      metadataIntervalId = setInterval(() => {
+      metadataIntervalId = setInterval(() => {        
         updateGameMetadata()
       }, 30000) // Update every 30 seconds
     }
@@ -266,26 +311,26 @@ export default function WordflowerGame() {
     }
   }
 
-  const fetchHints = async (gameId: string) => {
-    try {
-      const res = await fetch("/api/hint", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gameId }),
-      })
-      if (!res.ok) throw new Error("Failed to fetch hints")
-      return await res.json()
-    } catch (err) {
-      console.error(err)
-      return []
-    }
-  }
+  // const fetchHints = async (gameId: string) => {
+  //   try {
+  //     const res = await fetch("/api/hint", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ gameId }),
+  //     })
+  //     if (!res.ok) throw new Error("Failed to fetch hints")
+  //     return await res.json()
+  //   } catch (err) {
+  //     console.error(err)
+  //     return []
+  //   }
+  // }
 
-  useEffect(() => {
-    if (gameData?.gameId) {
-      fetchHints(gameData.gameId).then(setHintWords)
-    }
-  }, [gameData?.gameId])
+  // useEffect(() => {
+  //   if (gameData?.gameId) {
+  //     fetchHints(gameData.gameId).then(setHintWords)
+  //   }
+  // }, [gameData?.gameId])
 
 
   // Game control functions
@@ -298,8 +343,8 @@ export default function WordflowerGame() {
     setTimer(0)
     setFoundWords([])
     setCurrentWord("")
-    setHintLevel(0)
-    setCurrentHintWordIndex(0)
+    // setHintLevel(0)
+    // setCurrentHintWordIndex(0)
     clearSavedGame()
 
     // Log game start event
@@ -325,8 +370,16 @@ export default function WordflowerGame() {
     }
   }
 
-  const endGame = () => {
+  const endGame = async() => {
     setGameState('ended')
+    gameStateRef.current = 'ended'
+
+    if (intervalId) {
+      clearInterval(intervalId)
+      setIntervalId(null)
+    }
+    
+    updateGameMetadata()
     setShowEndModal(true)
     clearSavedGame()
 
@@ -334,15 +387,7 @@ export default function WordflowerGame() {
       finalWordsFound: foundWords.length,
       finalTime: timer,
       completionRate: gameData ? (foundWords.length / gameData.wordCount) * 100 : 0
-    })
-
-    // Final metadata update with current time
-    updateGameMetadata()
-
-    if (intervalId) {
-      clearInterval(intervalId)
-      setIntervalId(null)
-    }
+    })    
 
     fetchAllWords()
 
@@ -356,8 +401,8 @@ export default function WordflowerGame() {
     setShowEndModal(false)
     setCurrentWord("")
     setFoundWords([])
-    setHintLevel(0)
-    setCurrentHintWordIndex(0)
+    // setHintLevel(0)
+    // setCurrentHintWordIndex(0)
     setTimer(0)
     setGameData(null)
 
@@ -376,8 +421,8 @@ export default function WordflowerGame() {
       pangramCount: saved.pangramCount
     })
     setFoundWords(saved.foundWords)
-    setCurrentHintWordIndex(saved.currentHintWordIndex)
-    setHintLevel(saved.hintLevel)
+    // setCurrentHintWordIndex(saved.currentHintWordIndex)
+    // setHintLevel(saved.hintLevel)
     setTimer(saved.timer)
     setGameState(saved.gameState)
     setCurrentWord(saved.currentWord)
@@ -436,70 +481,68 @@ export default function WordflowerGame() {
     })
   }
 
-  const handleSkipWord = () => {
-    if (!hintWords.length) return
+  // const handleSkipWord = () => {
+  //   if (!hintWords.length) return
 
-    const oldWord = currentHintWord?.word || 'unknown'
+  //   const oldWord = currentHintWord?.word || 'unknown'
 
-    let nextIndex = (currentHintWordIndex + 1) % hintWords.length
-    let attempts = 0
-    while (foundWords.includes(hintWords[nextIndex]?.word.toLowerCase()) && attempts < hintWords.length) {
-      nextIndex = (nextIndex + 1) % hintWords.length
-      attempts++
-    }
+  //   let nextIndex = (currentHintWordIndex + 1) % hintWords.length
+  //   let attempts = 0
+  //   while (foundWords.includes(hintWords[nextIndex]?.word.toLowerCase()) && attempts < hintWords.length) {
+  //     nextIndex = (nextIndex + 1) % hintWords.length
+  //     attempts++
+  //   }
 
-    setHintLevel(1)
-    setCurrentHintWordIndex(nextIndex)
-    setViewedHintsIndex(prev => {
-      if (!prev.includes(nextIndex)) {
-        return [...prev, nextIndex];
-      }
-      return prev;
-    });
+  //   setHintLevel(1)
+  //   setCurrentHintWordIndex(nextIndex)
+  //   setViewedHintsIndex(prev => {
+  //     if (!prev.includes(nextIndex)) {
+  //       return [...prev, nextIndex];
+  //     }
+  //     return prev;
+  //   });
 
+  //   logAnalyticsEvent('hint_word_skipped', {
+  //     skippedWord: oldWord,
+  //     previousHintLevel: hintLevel,
+  //     newTargetWord: hintWords[nextIndex]?.word || 'unknown',
+  //     currentTime: timer,
+  //     wordsFoundSoFar: foundWords.length
+  //   })
+  // }
 
+  // const handlePreviousWord = () => {
+  //   if (!hintWords.length || viewedHintsIndex.length === 0) return;
 
-    logAnalyticsEvent('hint_word_skipped', {
-      skippedWord: oldWord,
-      previousHintLevel: hintLevel,
-      newTargetWord: hintWords[nextIndex]?.word || 'unknown',
-      currentTime: timer,
-      wordsFoundSoFar: foundWords.length
-    })
-  }
+  //   // Only hints user has seen AND not yet found
+  //   const eligibleIndices = viewedHintsIndex.filter(
+  //     idx => !foundWords.includes(hintWords[idx]?.word.toLowerCase())
+  //   );
 
-  const handlePreviousWord = () => {
-    if (!hintWords.length || viewedHintsIndex.length === 0) return;
+  //   if (eligibleIndices.length === 0) {
+  //     toast.message("No previous unseen hint.");
+  //     return;
+  //   }
 
-    // Only hints user has seen AND not yet found
-    const eligibleIndices = viewedHintsIndex.filter(
-      idx => !foundWords.includes(hintWords[idx]?.word.toLowerCase())
-    );
+  //   const currentPos = eligibleIndices.indexOf(currentHintWordIndex);
+  //   // Move one step backward, wrap using modulo
+  //   const prevPos =
+  //     currentPos === -1
+  //       ? eligibleIndices.length - 1
+  //       : (currentPos - 1 + eligibleIndices.length) % eligibleIndices.length;
 
-    if (eligibleIndices.length === 0) {
-      toast.message("No previous unseen hint.");
-      return;
-    }
+  //   const prevIndex = eligibleIndices[prevPos];
 
-    const currentPos = eligibleIndices.indexOf(currentHintWordIndex);
-    // Move one step backward, wrap using modulo
-    const prevPos =
-      currentPos === -1
-        ? eligibleIndices.length - 1
-        : (currentPos - 1 + eligibleIndices.length) % eligibleIndices.length;
+  //   setCurrentHintWordIndex(prevIndex);
+  //   setHintLevel(1);
 
-    const prevIndex = eligibleIndices[prevPos];
-
-    setCurrentHintWordIndex(prevIndex);
-    setHintLevel(1);
-
-    logAnalyticsEvent("hint_previous_word", {
-      movedTo: hintWords[prevIndex]?.word || "unknown",
-      from: hintWords[currentHintWordIndex]?.word || "unknown",
-      currentTime: timer,
-      wordsFoundSoFar: foundWords.length,
-    });
-  };
+  //   logAnalyticsEvent("hint_previous_word", {
+  //     movedTo: hintWords[prevIndex]?.word || "unknown",
+  //     from: hintWords[currentHintWordIndex]?.word || "unknown",
+  //     currentTime: timer,
+  //     wordsFoundSoFar: foundWords.length,
+  //   });
+  // };
 
   const handleSubmit = useCallback(async () => {
     if (gameState !== 'playing' || !gameData) {
@@ -570,9 +613,9 @@ export default function WordflowerGame() {
           completionRate: ((foundWords.length + 1) / gameData.wordCount) * 100
         })
 
-        if (isMobile && lowerWord === hintWords[currentHintWordIndex].word.toLowerCase()) {
-          handleSkipWord()
-        }
+        // if (isMobile && lowerWord === hintWords[currentHintWordIndex].word.toLowerCase()) {
+        //   handleSkipWord()
+        // }
 
         const encouragements = result.isPangram
           ? ["Pangram! Amazing! 🎉", "Incredible pangram! 🌟"]
@@ -596,23 +639,22 @@ export default function WordflowerGame() {
     }
   }, [currentWord, foundWords, gameData, gameState, logAnalyticsEvent])
 
-  const handleRequestHint = () => {
-    if (hintLevel < 4) {
-      const newHintLevel = hintLevel + 1
-      setHintLevel(newHintLevel)
-      if (!viewedHintsIndex.includes(currentHintWordIndex)) {
-        setViewedHintsIndex(prev => [...prev, currentHintWordIndex]);
-      }
+  // const handleRequestHint = () => {
+  //   if (hintLevel < 4) {
+  //     const newHintLevel = hintLevel + 1
+  //     setHintLevel(newHintLevel)
+  //     if (!viewedHintsIndex.includes(currentHintWordIndex)) {
+  //       setViewedHintsIndex(prev => [...prev, currentHintWordIndex]);
+  //     }
 
-
-      logAnalyticsEvent('hint_requested', {
-        hintLevel: newHintLevel,
-        targetWord: currentHintWord?.word || 'unknown',
-        currentTime: timer,
-        wordsFoundSoFar: foundWords.length
-      })
-    }
-  }
+  //     logAnalyticsEvent('hint_requested', {
+  //       hintLevel: newHintLevel,
+  //       targetWord: currentHintWord?.word || 'unknown',
+  //       currentTime: timer,
+  //       wordsFoundSoFar: foundWords.length
+  //     })
+  //   }
+  // }
 
 
 
@@ -695,7 +737,7 @@ export default function WordflowerGame() {
                 onLetterClick={handleLetterClick}
               />
               <div className="mt-8 text-center flex gap-2 justify-center">
-                {isMobile && <Button onClick={() => {
+                {/* {isMobile && <Button onClick={() => {
                   if (showHint === false) {
                     setShowHint(true)
                     handleRequestHint()
@@ -704,7 +746,7 @@ export default function WordflowerGame() {
                   setShowHint(false)
                 }}>
                   <LightbulbIcon />
-                </Button>}
+                </Button>} */}
                 <Button
                   onClick={handleSubmit}
                   size="lg"
@@ -725,7 +767,7 @@ export default function WordflowerGame() {
 
             {!isMobile && <div className="flex flex-col gap-4">
               <FoundWordsList foundWords={foundWords} totalWords={gameData.wordCount} />
-              <Card className="p-6 mb-6">
+              {/* <Card className="p-6 mb-6">
                 <HintSystem
                   currentHintWord={currentHintWord}
                   hintLevel={hintLevel}
@@ -734,7 +776,7 @@ export default function WordflowerGame() {
                   foundWords={foundWords}
                   onPreviousWord={handlePreviousWord}
                 />
-              </Card>
+              </Card> */}
             </div>}
           </div>
         )}
@@ -833,7 +875,7 @@ export default function WordflowerGame() {
         </DialogContent>
 
       </Dialog>
-      <Dialog open={showHint} onOpenChange={setShowHint}>
+      {/* <Dialog open={showHint} onOpenChange={setShowHint}>
         <DialogContent className="[&>button]:hidden">
           <HintSystem
             currentHintWord={currentHintWord}
@@ -844,7 +886,7 @@ export default function WordflowerGame() {
             onPreviousWord={handlePreviousWord}
           />
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
 
       <Toaster />
     </div>
