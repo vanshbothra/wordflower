@@ -24,7 +24,7 @@ export function GameControls({
 }: GameControlsProps) {
   if (isMobile) {
     return (
-      <h1 className="text-2xl font-bold text-foreground">
+      <h1 className={`text-2xl font-bold ${timer <= 60 ? 'text-red-500' : 'text-foreground'}`}>
         🌻 {formatTime(timer)}
       </h1>
     )
@@ -39,7 +39,7 @@ export function GameControls({
       <div className="flex-1 flex justify-end items-center gap-4">
         {gameState === 'playing' && (
           <div className="text-center">
-            <div className="text-2xl font-mono font-bold text-foreground">
+            <div className={`text-2xl font-mono font-bold ${timer <= 60 ? 'text-red-500' : 'text-foreground'}`}>
               {formatTime(timer)}
               {!isTabVisible && (
                 <span className="text-sm text-orange-500 block">⏸️ Paused</span>

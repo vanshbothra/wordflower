@@ -34,6 +34,13 @@ export function StartGameModal({
   formatTime,
   isStartingGame = false
 }: StartGameModalProps) {
+  // Format elapsed time for saved game display
+  const formatElapsedTime = (remainingSeconds: number) => {
+    const elapsedSeconds = 30 * 60 - remainingSeconds
+    const mins = Math.floor(elapsedSeconds / 60)
+    const secs = elapsedSeconds % 60
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -64,7 +71,7 @@ export function StartGameModal({
           {savedGame && (
             <div className="p-3 bg-primary/10 rounded-lg">
               <span className="text-primary font-medium">
-                📱 Saved Game Found: {savedGame.foundWords.length} words found, {formatTime(savedGame.timer)} played
+                📱 Saved Game Found: {savedGame.foundWords.length} words found, {formatElapsedTime(savedGame.timer)} played
               </span>
             </div>
           )}

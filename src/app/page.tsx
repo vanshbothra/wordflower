@@ -83,7 +83,7 @@ export default function WordflowerGame() {
   const [showStartModal, setShowStartModal] = useState(true)
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
   const [showEndModal, setShowEndModal] = useState(false)
-  const [timer, setTimer] = useState(0)
+  const [timer, setTimer] = useState(30 * 60) // 30 minutes in seconds
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null)
   const [isTabVisible, setIsTabVisible] = useState(true)
   const [savedGame, setSavedGame] = useState<SavedGameState | null>(null)
@@ -102,7 +102,10 @@ export default function WordflowerGame() {
   const [isStartingGame, setIsStartingGame] = useState(false)
   const [isEndingGame, setIsEndingGame] = useState(false)
   
-  const timerRef = useRef(0);
+  // Helper to calculate elapsed time
+  const getElapsedTime = () => 30 * 60 - timer
+  
+  const timerRef = useRef(30 * 60);
   const wordsFoundRef = useRef(0);
   const gameStateRef = useRef<'not-started' | 'playing' | 'ended'>('not-started');
   // const currentHintWord = hintWords[currentHintWordIndex] || null
@@ -172,7 +175,7 @@ export default function WordflowerGame() {
           gameMetadata: {
             totalWords: gameData.wordCount,
             wordsFound: wordsFoundRef.current,
-            totalTime: timerRef.current,
+            totalTime: 30 * 60 - timerRef.current, // Elapsed time
             gameState: gameStateRef.current
           }
         })
@@ -282,7 +285,14 @@ export default function WordflowerGame() {
   useEffect(() => {
     if (gameState === 'playing' && isTabVisible) {
       const id = setInterval(() => {
-        setTimer((prev) => prev + 1)
+        setTimer((prev) => {
+          if (prev <= 1) {
+            // Timer reached zero, end game automatically
+            setTimeout(() => endGame(), 0) // Use setTimeout to avoid circular dependency
+            return 0
+          }
+          return prev - 1
+        })
       }, 1000)
       setIntervalId(id)
       return () => clearInterval(id)
@@ -301,7 +311,7 @@ export default function WordflowerGame() {
       if (gameState === 'playing') {
         logAnalyticsEvent('tab_visibility_changed', {
           isVisible: newVisibility,
-          currentTime: timer,
+          currentTime: getElapsedTime(),
           wordsFound: foundWords.length
         })
       }
@@ -309,7 +319,7 @@ export default function WordflowerGame() {
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [gameState, timer, foundWords.length, logAnalyticsEvent])
+  }, [gameState, foundWords.length, logAnalyticsEvent, getElapsedTime])
 
   // Save game on beforeunload
   useEffect(() => {
@@ -346,11 +356,18 @@ export default function WordflowerGame() {
     }
   }, [gameState, updateGameMetadata])
 
-  // Format timer display
+  // Format timer display - countdown format
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+    
+    if (mins > 0) {
+      // Show only minutes when more than 1 minute remaining
+      return `${mins}m`
+    } else {
+      // Show seconds when less than 1 minute remaining
+      return `${secs}s`
+    }
   }
 
   // Load new game from server
@@ -398,7 +415,7 @@ export default function WordflowerGame() {
 
       setGameState('playing')
       setShowStartModal(false)
-      setTimer(0)
+      setTimer(30 * 60) // Reset to 30 minutes
       setFoundWords([])
       setCurrentWord("")
       // setHintLevel(0)
@@ -448,7 +465,7 @@ export default function WordflowerGame() {
 
       logAnalyticsEvent('game_ended', {
         finalWordsFound: foundWords.length,
-        finalTime: timer,
+        finalTime: getElapsedTime(),
         completionRate: gameData ? (foundWords.length / gameData.wordCount) * 100 : 0
       })    
 
@@ -469,7 +486,7 @@ export default function WordflowerGame() {
     setFoundWords([])
     // setHintLevel(0)
     // setCurrentHintWordIndex(0)
-    setTimer(0)
+    setTimer(30 * 60) // Reset to 30 minutes
     setGameData(null)
     
     // Reset feedback form
@@ -584,7 +601,7 @@ export default function WordflowerGame() {
     setGameData({ ...gameData, outerLetters: [...gameData.outerLetters] }) // trigger re-render
     logAnalyticsEvent('letters_shuffled', {
       newOrder: gameData.outerLetters,
-      currentTime: timer,
+      currentTime: getElapsedTime(),
       wordsFoundSoFar: foundWords.length
     })
   }
@@ -663,7 +680,7 @@ export default function WordflowerGame() {
         reason: 'too_short',
         attemptedWord: currentWord,
         wordLength: currentWord.length,
-        currentTime: timer
+        currentTime: getElapsedTime()
       })
       toast.error("Word too short")
       return
@@ -675,7 +692,7 @@ export default function WordflowerGame() {
       logAnalyticsEvent('word_submission_failed', {
         reason: 'already_found',
         attemptedWord: lowerWord,
-        currentTime: timer
+        currentTime: getElapsedTime()
       })
       toast.error("Word already found")
       setTimeout(() => {
@@ -690,7 +707,7 @@ export default function WordflowerGame() {
         attemptedWord: lowerWord,
         centerLetter: gameData.centerLetter,
         outerLetters: gameData.outerLetters,
-        currentTime: timer
+        currentTime: getElapsedTime()
       })
       toast.error("Word does not meet requirements")
       return
@@ -718,7 +735,7 @@ export default function WordflowerGame() {
           wordLength: lowerWord.length,
           isPangram: result.isPangram,
           totalWordsFound: foundWords.length + 1,
-          currentTime: timer,
+          currentTime: getElapsedTime(),
           completionRate: ((foundWords.length + 1) / gameData.wordCount) * 100
         })
 
@@ -735,7 +752,7 @@ export default function WordflowerGame() {
         logAnalyticsEvent('word_submission_failed', {
           reason: 'not_in_wordlist',
           attemptedWord: lowerWord,
-          currentTime: timer
+          currentTime: getElapsedTime()
         })
         toast.error("Word not in word list")
         setTimeout(() => {
@@ -748,7 +765,7 @@ export default function WordflowerGame() {
     } finally {
       setIsSubmittingWord(false)
     }
-  }, [currentWord, foundWords, gameData, gameState, logAnalyticsEvent, timer])
+  }, [currentWord, foundWords, gameData, gameState, logAnalyticsEvent, getElapsedTime])
 
   // const handleRequestHint = () => {
   //   if (hintLevel < 4) {
@@ -875,8 +892,12 @@ export default function WordflowerGame() {
         foundWords={foundWords}
         allWords={allWords}
         gameData={gameData}
-        timer={timer}
-        formatTime={formatTime}
+        timer={getElapsedTime()}
+        formatTime={(seconds) => {
+          const mins = Math.floor(seconds / 60)
+          const secs = seconds % 60
+          return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+        }}
         onPlayAgain={resetGame}
       />
 
