@@ -97,6 +97,11 @@ export default function WordflowerGame() {
   })
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
   
+  // Loading states
+  const [isSubmittingWord, setIsSubmittingWord] = useState(false)
+  const [isStartingGame, setIsStartingGame] = useState(false)
+  const [isEndingGame, setIsEndingGame] = useState(false)
+  
   const timerRef = useRef(0);
   const wordsFoundRef = useRef(0);
   const gameStateRef = useRef<'not-started' | 'playing' | 'ended'>('not-started');
@@ -386,28 +391,33 @@ export default function WordflowerGame() {
 
   // Game control functions
   const startGame = async () => {
-    const newGame = await loadNewGame()
-    if (!newGame) return
+    setIsStartingGame(true)
+    try {
+      const newGame = await loadNewGame()
+      if (!newGame) return
 
-    setGameState('playing')
-    setShowStartModal(false)
-    setTimer(0)
-    setFoundWords([])
-    setCurrentWord("")
-    // setHintLevel(0)
-    // setCurrentHintWordIndex(0)
-    clearSavedGame()
+      setGameState('playing')
+      setShowStartModal(false)
+      setTimer(0)
+      setFoundWords([])
+      setCurrentWord("")
+      // setHintLevel(0)
+      // setCurrentHintWordIndex(0)
+      clearSavedGame()
 
-    // Log game start event
-    setTimeout(() => {
-      logAnalyticsEvent('game_started', {
-        centerLetter: newGame.centerLetter,
-        outerLetters: newGame.outerLetters,
-        totalWordsAvailable: newGame.wordCount
-      })
-    }, 100)
+      // Log game start event
+      setTimeout(() => {
+        logAnalyticsEvent('game_started', {
+          centerLetter: newGame.centerLetter,
+          outerLetters: newGame.outerLetters,
+          totalWordsAvailable: newGame.wordCount
+        })
+      }, 100)
 
-    toast.success("Game started! Good luck! 🌻")
+      toast.success("Game started! Good luck! 🌻")
+    } finally {
+      setIsStartingGame(false)
+    }
   }
 
   const fetchAllWords = async () => {
@@ -422,25 +432,30 @@ export default function WordflowerGame() {
   }
 
   const endGame = async() => {
-    setGameState('ended')
-    gameStateRef.current = 'ended'
+    setIsEndingGame(true)
+    try {
+      setGameState('ended')
+      gameStateRef.current = 'ended'
 
-    if (intervalId) {
-      clearInterval(intervalId)
-      setIntervalId(null)
+      if (intervalId) {
+        clearInterval(intervalId)
+        setIntervalId(null)
+      }
+      
+      updateGameMetadata()
+      // Show feedback modal first, then end modal after feedback submission
+      setShowFeedbackModal(true)
+
+      logAnalyticsEvent('game_ended', {
+        finalWordsFound: foundWords.length,
+        finalTime: timer,
+        completionRate: gameData ? (foundWords.length / gameData.wordCount) * 100 : 0
+      })    
+
+      await fetchAllWords()
+    } finally {
+      setIsEndingGame(false)
     }
-    
-    updateGameMetadata()
-    // Show feedback modal first, then end modal after feedback submission
-    setShowFeedbackModal(true)
-
-    logAnalyticsEvent('game_ended', {
-      finalWordsFound: foundWords.length,
-      finalTime: timer,
-      completionRate: gameData ? (foundWords.length / gameData.wordCount) * 100 : 0
-    })    
-
-    fetchAllWords()
   }
 
 
@@ -682,6 +697,7 @@ export default function WordflowerGame() {
     }
 
     // Validate word with server
+    setIsSubmittingWord(true)
     try {
       const response = await fetch('/api/game', {
         method: 'PUT',
@@ -729,8 +745,10 @@ export default function WordflowerGame() {
     } catch (error) {
       console.error('Failed to validate word:', error)
       toast.error("Failed to validate word")
+    } finally {
+      setIsSubmittingWord(false)
     }
-  }, [currentWord, foundWords, gameData, gameState, logAnalyticsEvent])
+  }, [currentWord, foundWords, gameData, gameState, logAnalyticsEvent, timer])
 
   // const handleRequestHint = () => {
   //   if (hintLevel < 4) {
@@ -789,6 +807,7 @@ export default function WordflowerGame() {
             isMobile={isMobile}
             onEndGame={endGame}
             onShowEndModal={() => setShowEndModal(true)}
+            isEndingGame={isEndingGame}
           />
 
           {gameData && isMobile && <FoundWordsAccordion foundWords={foundWords} totalWords={gameData?.wordCount} />}
@@ -809,6 +828,7 @@ export default function WordflowerGame() {
                 gameState={gameState}
                 onSubmit={handleSubmit}
                 onShuffle={handleShuffle}
+                isSubmittingWord={isSubmittingWord}
               />
             </div>
 
@@ -846,6 +866,7 @@ export default function WordflowerGame() {
         onStartNewGame={startGame}
         onResumeGame={resumeGame}
         formatTime={formatTime}
+        isStartingGame={isStartingGame}
       />
 
       <EndGameModal

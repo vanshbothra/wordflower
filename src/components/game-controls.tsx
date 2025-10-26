@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"
 
 interface GameControlsProps {
   gameState: 'not-started' | 'playing' | 'ended'
@@ -8,6 +9,7 @@ interface GameControlsProps {
   isMobile: boolean
   onEndGame: () => void
   onShowEndModal: () => void
+  isEndingGame?: boolean
 }
 
 export function GameControls({
@@ -17,7 +19,8 @@ export function GameControls({
   isTabVisible,
   isMobile,
   onEndGame,
-  onShowEndModal
+  onShowEndModal,
+  isEndingGame = false
 }: GameControlsProps) {
   if (isMobile) {
     return (
@@ -42,8 +45,20 @@ export function GameControls({
                 <span className="text-sm text-orange-500 block">⏸️ Paused</span>
               )}
             </div>
-            <Button onClick={onEndGame} variant="destructive" size="sm">
-              End Game
+            <Button 
+              onClick={onEndGame} 
+              variant="destructive" 
+              size="sm"
+              disabled={isEndingGame}
+            >
+              {isEndingGame ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Ending...
+                </>
+              ) : (
+                "End Game"
+              )}
             </Button>
           </div>
         )}

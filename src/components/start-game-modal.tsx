@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Loader2 } from "lucide-react"
 
 interface SavedGameState {
   gameId: string
@@ -21,6 +22,7 @@ interface StartGameModalProps {
   onStartNewGame: () => void
   onResumeGame: (savedGame: SavedGameState) => void
   formatTime: (seconds: number) => string
+  isStartingGame?: boolean
 }
 
 export function StartGameModal({
@@ -29,7 +31,8 @@ export function StartGameModal({
   savedGame,
   onStartNewGame,
   onResumeGame,
-  formatTime
+  formatTime,
+  isStartingGame = false
 }: StartGameModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -69,16 +72,44 @@ export function StartGameModal({
         <DialogFooter className="gap-2">
           {savedGame ? (
             <>
-              <Button onClick={onStartNewGame} variant="outline" className="flex-1">
-                New Game
+              <Button 
+                onClick={onStartNewGame} 
+                variant="outline" 
+                className="flex-1"
+                disabled={isStartingGame}
+              >
+                {isStartingGame ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Starting...
+                  </>
+                ) : (
+                  "New Game"
+                )}
               </Button>
-              <Button onClick={() => onResumeGame(savedGame)} className="flex-1">
+              <Button 
+                onClick={() => onResumeGame(savedGame)} 
+                className="flex-1"
+                disabled={isStartingGame}
+              >
                 Resume Game
               </Button>
             </>
           ) : (
-            <Button onClick={onStartNewGame} size="lg" className="w-full">
-              Start Game
+            <Button 
+              onClick={onStartNewGame} 
+              size="lg" 
+              className="w-full"
+              disabled={isStartingGame}
+            >
+              {isStartingGame ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Starting Game...
+                </>
+              ) : (
+                "Start Game"
+              )}
             </Button>
           )}
         </DialogFooter>
