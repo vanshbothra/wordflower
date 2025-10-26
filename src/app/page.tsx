@@ -3,18 +3,17 @@
 import { useState, useEffect, useCallback, useRef, use } from "react"
 import { Flower } from "@/components/flower"
 import { WordDisplay } from "@/components/word-display"
-// import { HintSystem } from "@/components/hint-system"
 import { FoundWordsList } from "@/components/found-words-list"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { StartGameModal } from "@/components/start-game-modal"
+import { FeedbackModal } from "@/components/feedback-modal"
+import { EndGameModal } from "@/components/end-game-modal"
+import { GameControls } from "@/components/game-controls"
+import { GameActions } from "@/components/game-actions"
 import { isValidWord, WordHints } from "@/lib/word-data"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
-import { Progress } from "@/components/ui/progress"
-import { LightbulbIcon, ShuffleIcon } from "lucide-react"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import FoundWordsAccordion from "@/components/foundWordsAccordion"
-import { Card } from "@/components/ui/card"
 
 export interface GameData {
   gameId: string
@@ -38,6 +37,14 @@ interface SavedGameState {
   outerLetters: string[]
   wordCount: number
   pangramCount: number
+}
+
+// Feedback form interface
+interface GameFeedback {
+  satisfaction: number // 1-5 scale
+  mostDifficult: string
+  willReturn: boolean
+  submittedAt: Date
 }
 
 // Generate unique game ID
@@ -78,12 +85,21 @@ export default function WordflowerGame() {
   // Game state management
   const [gameState, setGameState] = useState<'not-started' | 'playing' | 'ended'>('not-started')
   const [showStartModal, setShowStartModal] = useState(true)
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false)
   const [showEndModal, setShowEndModal] = useState(false)
   const [timer, setTimer] = useState(0)
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null)
   const [isTabVisible, setIsTabVisible] = useState(true)
   const [savedGame, setSavedGame] = useState<SavedGameState | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  
+  // Feedback form state
+  const [feedbackForm, setFeedbackForm] = useState({
+    satisfaction: 0,
+    mostDifficult: '',
+    willReturn: false
+  })
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
   
   const timerRef = useRef(0);
   const wordsFoundRef = useRef(0);
@@ -151,6 +167,32 @@ export default function WordflowerGame() {
       console.error('Failed to update game metadata:', error)
     }
   }, [gameData?.gameId, gameState, userId])
+
+  // Submit feedback to analytics
+  const submitFeedback = useCallback(async (feedback: GameFeedback) => {
+    if (!gameData?.gameId || !userId) return false
+
+    try {
+      const response = await fetch('/api/analytics/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          gameId: gameData.gameId,
+          feedback
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to submit feedback')
+      }
+
+      return true
+    } catch (error) {
+      console.error('Failed to submit feedback:', error)
+      return false
+    }
+  }, [gameData?.gameId, userId])
 
   // Helper function to update metadata with current timer value
   // const updateGameMetadataWithCurrentTime = useCallback(async () => {
@@ -380,8 +422,8 @@ export default function WordflowerGame() {
     }
     
     updateGameMetadata()
-    setShowEndModal(true)
-    clearSavedGame()
+    // Show feedback modal first, then end modal after feedback submission
+    setShowFeedbackModal(true)
 
     logAnalyticsEvent('game_ended', {
       finalWordsFound: foundWords.length,
@@ -390,7 +432,6 @@ export default function WordflowerGame() {
     })    
 
     fetchAllWords()
-
   }
 
 
@@ -398,6 +439,7 @@ export default function WordflowerGame() {
     setGameState('not-started')
     clearSavedGame()
     setShowStartModal(true)
+    setShowFeedbackModal(false)
     setShowEndModal(false)
     setCurrentWord("")
     setFoundWords([])
@@ -405,11 +447,53 @@ export default function WordflowerGame() {
     // setCurrentHintWordIndex(0)
     setTimer(0)
     setGameData(null)
+    
+    // Reset feedback form
+    setFeedbackForm({
+      satisfaction: 0,
+      mostDifficult: '',
+      willReturn: false
+    })
 
     if (intervalId) {
       clearInterval(intervalId)
       setIntervalId(null)
     }
+  }
+
+  // Handle feedback form submission
+  const handleFeedbackSubmit = async () => {
+    if (feedbackForm.satisfaction === 0 || feedbackForm.mostDifficult.trim() === '') {
+      toast.error("Please complete all required fields")
+      return
+    }
+
+    setIsSubmittingFeedback(true)
+
+    const feedback: GameFeedback = {
+      satisfaction: feedbackForm.satisfaction,
+      mostDifficult: feedbackForm.mostDifficult.trim(),
+      willReturn: feedbackForm.willReturn,
+      submittedAt: new Date()
+    }
+
+    const success = await submitFeedback(feedback)
+    
+    if (success) {
+      toast.success("Thank you for your feedback!")
+      setShowFeedbackModal(false)
+      setShowEndModal(true)
+      clearSavedGame()
+    } else {
+      toast.error("Failed to submit feedback. Please try again.")
+    }
+
+    setIsSubmittingFeedback(false)
+  }
+
+  // Check if feedback form is valid
+  const isFeedbackFormValid = () => {
+    return feedbackForm.satisfaction > 0 && feedbackForm.mostDifficult.trim() !== ''
   }
 
   const resumeGame = (saved: SavedGameState) => {
@@ -688,41 +772,16 @@ export default function WordflowerGame() {
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-6xl mx-auto">
         <header className="text-center mb-8">
-          <div className="flex justify-between items-center mb-4">
+          <GameControls
+            gameState={gameState}
+            timer={timer}
+            formatTime={formatTime}
+            isTabVisible={isTabVisible}
+            isMobile={isMobile}
+            onEndGame={endGame}
+            onShowEndModal={() => setShowEndModal(true)}
+          />
 
-
-            {isMobile ? <h1 className="text-2xl font-bold text-foreground ">🌻 {formatTime(timer)}</h1>
-              :
-              <div className="flex-1 text-center">
-                <h1 className="text-5xl font-bold text-foreground mb-2">🌻 Wordflower</h1>
-              </div>}
-
-            <div className="flex-1 flex justify-end items-center gap-4">
-              {gameState === 'playing' && (
-                <div className="text-center">
-                  <div className="text-2xl font-mono font-bold text-foreground">
-                    {!isMobile && formatTime(timer)}
-                    {!isTabVisible && (
-                      <span className="text-sm text-orange-500 block">⏸️ Paused</span>
-                    )}
-                  </div>
-                  <Button onClick={endGame} variant="destructive" size="sm">
-                    End Game
-                  </Button>
-                </div>
-              )}
-              {gameState === 'ended' && (
-                <div className="text-center">
-                  <Button onClick={() => setShowEndModal(true)} variant="secondary" size="sm">
-                    Game Ended - {formatTime(timer)}
-                  </Button>
-                </div>
-              )}
-            </div>
-
-          </div>
-
-          {/* <p className="text-muted-foreground text-lg">Create words using the letters. Must include the center letter!</p> */}
           {gameData && isMobile && <FoundWordsAccordion foundWords={foundWords} totalWords={gameData?.wordCount} />}
         </header>
 
@@ -736,33 +795,12 @@ export default function WordflowerGame() {
                 currentWord={currentWord}
                 onLetterClick={handleLetterClick}
               />
-              <div className="mt-8 text-center flex gap-2 justify-center">
-                {/* {isMobile && <Button onClick={() => {
-                  if (showHint === false) {
-                    setShowHint(true)
-                    handleRequestHint()
-                    return
-                  }
-                  setShowHint(false)
-                }}>
-                  <LightbulbIcon />
-                </Button>} */}
-                <Button
-                  onClick={handleSubmit}
-                  size="lg"
-                  disabled={currentWord.length === 0 || gameState !== 'playing'}
-                >
-                  Submit Word
-                </Button>
-                <Button size="lg"
-                  onClick={(e) => {
-                    handleShuffle()
-                    e.currentTarget.blur()
-                  }}
-                >
-                  <ShuffleIcon />
-                </Button>
-              </div>
+              <GameActions
+                currentWord={currentWord}
+                gameState={gameState}
+                onSubmit={handleSubmit}
+                onShuffle={handleShuffle}
+              />
             </div>
 
             {!isMobile && <div className="flex flex-col gap-4">
@@ -782,111 +820,35 @@ export default function WordflowerGame() {
         )}
       </div>
 
-      {/* Start Game Modal */}
-      <Dialog open={showStartModal} onOpenChange={setShowStartModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Welcome to Wordflower! 🌻</DialogTitle>
-            <DialogDescription>
-              Create as many words as you can using the available letters.
-              Each word must contain the center letter and be at least 4 letters long.
-              {savedGame && (
-                <span className="block mt-2 text-primary font-medium">
-                  Found a saved game with {savedGame.foundWords.length} words and {formatTime(savedGame.timer)} played!
-                </span>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            {savedGame ? (
-              <>
-                <Button onClick={startGame} variant="outline" className="flex-1">
-                  New Game
-                </Button>
-                <Button onClick={() => resumeGame(savedGame)} className="flex-1">
-                  Resume Game
-                </Button>
-              </>
-            ) : (
-              <Button onClick={startGame} size="lg" className="w-full">
-                Start Game
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={showEndModal} onOpenChange={setShowEndModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>🎉 Game Complete!</DialogTitle>
-            <DialogDescription>
-              Congratulations on completing your word-finding adventure!
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1 text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="text-2xl font-bold text-primary">{foundWords.length}/{gameData?.wordCount}</div>
-                <div className="text-sm text-muted-foreground">Words Found</div>
-                <Progress value={gameData ? (foundWords.length / gameData.wordCount) * 100 : 0} />
-              </div>
-              <div className="text-center content-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="text-2xl font-bold text-primary">{formatTime(timer)}</div>
-                <div className="text-sm text-muted-foreground">Total Time</div>
-              </div>
-            </div>
+      {/* Modals */}
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        feedbackForm={feedbackForm}
+        setFeedbackForm={setFeedbackForm}
+        onSubmit={handleFeedbackSubmit}
+        isSubmitting={isSubmittingFeedback}
+        isValid={isFeedbackFormValid()}
+      />
 
-            <div className="mt-4">
-              <h4 className="font-semibold mb-2">All Words</h4>
-              <div className="max-h-32 overflow-y-auto bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                <div className="flex flex-wrap gap-2">
-                  {allWords.map((word, index) => {
-                    const isFound = foundWords.some(
-                      (w) => w.trim().toLowerCase() === word.trim().toLowerCase()
-                    )
+      <StartGameModal
+        isOpen={showStartModal}
+        onOpenChange={setShowStartModal}
+        savedGame={savedGame}
+        onStartNewGame={startGame}
+        onResumeGame={resumeGame}
+        formatTime={formatTime}
+      />
 
-                    return (
-                      <span
-                        key={index}
-                        className={`px-2 py-1 rounded text-sm ${isFound
-                          ? 'bg-gray-700 text-primary-foreground'
-                          : 'bg-gray-200 dark:bg-gray-700 text-muted-foreground'
-                          }`}
-                      >
-                        {word}
-                      </span>
-                    )
-                  })}
-
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button onClick={() => setShowEndModal(false)} variant="outline">
-              Close
-            </Button>
-            <Button onClick={resetGame} size="lg">
-              Play Again
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-
-      </Dialog>
-      {/* <Dialog open={showHint} onOpenChange={setShowHint}>
-        <DialogContent className="[&>button]:hidden">
-          <HintSystem
-            currentHintWord={currentHintWord}
-            hintLevel={hintLevel}
-            onRequestHint={handleRequestHint}
-            onSkipWord={handleSkipWord}
-            foundWords={foundWords}
-            onPreviousWord={handlePreviousWord}
-          />
-        </DialogContent>
-      </Dialog> */}
+      <EndGameModal
+        isOpen={showEndModal}
+        onOpenChange={setShowEndModal}
+        foundWords={foundWords}
+        allWords={allWords}
+        gameData={gameData}
+        timer={timer}
+        formatTime={formatTime}
+        onPlayAgain={resetGame}
+      />
 
       <Toaster />
     </div>

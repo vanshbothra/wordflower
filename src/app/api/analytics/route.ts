@@ -21,6 +21,12 @@ interface GameSession {
     totalTime?: number
     gameState?: string
   }
+  feedback?: {
+    satisfaction: number
+    mostDifficult: string
+    willReturn: boolean
+    submittedAt: Date
+  }
 }
 
 // User analytics document interface (new structure)
