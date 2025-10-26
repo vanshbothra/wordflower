@@ -52,20 +52,16 @@ const generateGameId = () => {
   return `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 }
 
-// Generate unique user ID
-const generateUserId = () => {
-  return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-}
-
-// Get or create user ID from localStorage
+// Get user ID from localStorage (middleware ensures it exists)
 const getUserId = () => {
   if (typeof window === "undefined") return null
   
-  let userId = localStorage.getItem('wordflower_user_id')
-  if (!userId) {
-    userId = generateUserId()
-    localStorage.setItem('wordflower_user_id', userId)
+  const userId = localStorage.getItem('wordflower_user_id')
+  if (userId) {
+    // Ensure cookie is synced with localStorage
+    document.cookie = `wordflower_user_id=${userId}; path=/; max-age=31536000`
   }
+  console.log("User ID:", userId)
   return userId
 }
 
@@ -122,6 +118,19 @@ export default function WordflowerGame() {
   useEffect(() => {
     const id = getUserId()
     setUserId(id)
+    
+    // Sync localStorage with cookies for middleware
+    const syncCookie = () => {
+      const localUserId = localStorage.getItem('wordflower_user_id')
+      if (localUserId) {
+        document.cookie = `wordflower_user_id=${localUserId}; path=/; max-age=31536000`
+      }
+    }
+    
+    syncCookie()
+    window.addEventListener('storage', syncCookie)
+    
+    return () => window.removeEventListener('storage', syncCookie)
   }, [])
 
   // Analytics logging function
