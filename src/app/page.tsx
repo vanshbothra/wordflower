@@ -9,6 +9,7 @@ import { FeedbackModal } from "@/components/feedback-modal"
 import { EndGameModal } from "@/components/end-game-modal"
 import { GameControls } from "@/components/game-controls"
 import { GameActions } from "@/components/game-actions"
+import { GameRules } from "@/components/game-rules"
 import { isValidWord, WordHints } from "@/lib/word-data"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
@@ -851,6 +852,7 @@ export default function WordflowerGame() {
 
             {!isMobile && <div className="flex flex-col gap-4">
               <FoundWordsList foundWords={foundWords} totalWords={gameData.wordCount} />
+              <GameRules />
               {/* <Card className="p-6 mb-6">
                 <HintSystem
                   currentHintWord={currentHintWord}
