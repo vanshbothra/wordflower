@@ -35,17 +35,37 @@ export function StartGameModal({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Welcome to Wordflower! 🌻</DialogTitle>
-          <DialogDescription>
-            Create as many words as you can using the available letters.
-            Each word must contain the center letter and be at least 4 letters long.
-            {savedGame && (
-              <span className="block mt-2 text-primary font-medium">
-                Found a saved game with {savedGame.foundWords.length} words and {formatTime(savedGame.timer)} played!
-              </span>
-            )}
-          </DialogDescription>
+          <DialogTitle>Thank you for participating in our study! 🌻</DialogTitle>          
         </DialogHeader>
+        
+        <div className="space-y-4 py-4">
+          <div>
+            <h4 className="font-semibold mb-2">How to Play:</h4>
+            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+              <li>Create as many words as you can using the available letters</li>
+              <li>Each word must contain the center letter and be at least 4 letters long</li>
+              <li>You can repeat letters as needed</li>
+              <li>Look for pangrams - words that use all the letters!</li>
+            </ul>
+          </div>
+          
+          <div className="text-sm">
+            <span className="font-semibold">Time Limit:</span> 30 minutes
+          </div>
+          
+          <div className="text-sm text-muted-foreground">
+            After completing the game, you'll be asked to provide feedback through a short survey. 
+            We'll be happy to share the results with you!
+          </div>
+          
+          {savedGame && (
+            <div className="p-3 bg-primary/10 rounded-lg">
+              <span className="text-primary font-medium">
+                📱 Saved Game Found: {savedGame.foundWords.length} words found, {formatTime(savedGame.timer)} played
+              </span>
+            </div>
+          )}
+        </div>
         <DialogFooter className="gap-2">
           {savedGame ? (
             <>

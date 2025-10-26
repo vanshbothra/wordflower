@@ -32,7 +32,7 @@ export function WordDisplay({ currentWord, onClear, onBackspace }: WordDisplayPr
           "text-foreground",
         )}
       >
-        {currentWord || <span className="text-muted-foreground text-xl">Type or click</span>}
+        {currentWord || <span className="text-muted-foreground text-xl">Type or Click Letters</span>}
       </div>
 
       <Button
