@@ -106,13 +106,6 @@ export default function SignUpPage() {
     }
   }, [router])
 
-  useEffect(() => {
-    const consentGiven = localStorage.getItem("wordflower_consent")
-    if (!consentGiven) {
-      router.push("/info") 
-    }
-  }, [router])
-
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -122,7 +115,7 @@ export default function SignUpPage() {
     }))
   }
 
-  console.log("Form Data:", formData)
+  // console.log("Form Data:", formData)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

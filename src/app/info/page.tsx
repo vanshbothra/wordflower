@@ -34,8 +34,6 @@ export default function ExperimentInfoPage() {
                     </p>
                     <br />
                     <p>
-
-
                         Through this word game, we aim to study cognition. Accordingly, please do not feel
                         pressured to do well in the game. Our goal is not to judge you or your playing skills, but
                         rather to understand how you, and other participants, think, form patterns, recall words
@@ -83,7 +81,8 @@ export default function ExperimentInfoPage() {
                 <div className="pt-6 flex justify-center">
                     <Button
                         onClick={() => {
-                            localStorage.setItem("wordflower_consent", "true")
+                            // Set consent cookie instead of localStorage
+                            document.cookie = "wordflower_consent=true; path=/; max-age=31536000"
                             router.push("/signup")
                         }
                         }

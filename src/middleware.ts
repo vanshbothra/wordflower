@@ -8,10 +8,22 @@ export function middleware(request: NextRequest) {
   // Define protected routes (routes that require authentication)
   const protectedRoutes = ['/']
   const authRoutes = ['/signin', '/signup']
+  const consentRequiredRoutes = ['/signin', '/signup', '/']
 
   // Check if the current route is protected
   const isProtectedRoute = protectedRoutes.includes(pathname)
   const isAuthRoute = authRoutes.includes(pathname)
+  const isConsentRequiredRoute = consentRequiredRoutes.includes(pathname)
+
+  // Check for consent first (required for all main routes except /info)
+  if (isConsentRequiredRoute) {
+    const consentGiven = request.cookies.get('wordflower_consent')?.value
+    
+    if (!consentGiven) {
+      // Redirect to info page if no consent found
+      return NextResponse.redirect(new URL('/info', request.url))
+    }
+  }
 
   // For protected routes, check if user_id exists in localStorage
   // Since middleware runs on the server, we can't access localStorage directly
