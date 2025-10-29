@@ -1,15 +1,15 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef, use } from "react"
+import { useRouter } from "next/navigation"
 import { Flower } from "@/components/flower"
 import { WordDisplay } from "@/components/word-display"
 import { FoundWordsList } from "@/components/found-words-list"
 import { StartGameModal } from "@/components/start-game-modal"
-import { FeedbackModal } from "@/components/feedback-modal"
-import { EndGameModal } from "@/components/end-game-modal"
+import { EndGameConfirmModal } from "@/components/end-game-confirm-modal"
 import { GameControls } from "@/components/game-controls"
 import { GameActions } from "@/components/game-actions"
-import { GameRules } from "@/components/game-rules"
+import { GameRules } from '@/components/game-rules'
 import { isValidWord, WordHints } from "@/lib/word-data"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
@@ -67,6 +67,7 @@ const getUserId = () => {
 }
 
 export default function WordflowerGame() {
+  const router = useRouter()
   const isMobile = useMediaQuery("(max-width: 1025px)")
   const [currentWord, setCurrentWord] = useState("")
   const [foundWords, setFoundWords] = useState<string[]>([])
@@ -82,21 +83,12 @@ export default function WordflowerGame() {
   // Game state management
   const [gameState, setGameState] = useState<'not-started' | 'playing' | 'ended'>('not-started')
   const [showStartModal, setShowStartModal] = useState(true)
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false)
-  const [showEndModal, setShowEndModal] = useState(false)
+  const [showEndConfirmModal, setShowEndConfirmModal] = useState(false)
   const [timer, setTimer] = useState(30 * 60) // 30 minutes in seconds
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null)
   const [isTabVisible, setIsTabVisible] = useState(true)
   const [savedGame, setSavedGame] = useState<SavedGameState | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
-  
-  // Feedback form state
-  const [feedbackForm, setFeedbackForm] = useState({
-    satisfaction: 0,
-    mostDifficult: '',
-    willReturn: false
-  })
-  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
   
   // Loading states
   const [isSubmittingWord, setIsSubmittingWord] = useState(false)
@@ -444,8 +436,10 @@ export default function WordflowerGame() {
       if (!res.ok) throw new Error("Failed to fetch")
       const data = await res.json()
       setAllWords(data)
+      return data
     } catch (err) {
       console.error(err)
+      return []
     }
   }
 
@@ -461,8 +455,6 @@ export default function WordflowerGame() {
       }
       
       updateGameMetadata()
-      // Show feedback modal first, then end modal after feedback submission
-      setShowFeedbackModal(true)
 
       logAnalyticsEvent('game_ended', {
         finalWordsFound: foundWords.length,
@@ -470,10 +462,38 @@ export default function WordflowerGame() {
         completionRate: gameData ? (foundWords.length / gameData.wordCount) * 100 : 0
       })    
 
-      await fetchAllWords()
+      const fetchedAllWords = await fetchAllWords()
+      
+      // Store results data in localStorage for the results page
+      const resultsData = {
+        gameId: gameData!.gameId,
+        foundWords,
+        allWords: fetchedAllWords,
+        timer: getElapsedTime(),
+        gameData,
+        timestamp: Date.now()
+      }
+      localStorage.setItem('wordflower_results', JSON.stringify(resultsData))
+      
+      // Simple redirect to results page
+      router.push('/results')
     } finally {
       setIsEndingGame(false)
     }
+  }
+
+  // Handle manual end game with confirmation
+  const handleEndGameRequest = () => {
+    setShowEndConfirmModal(true)
+  }
+
+  const handleEndGameConfirm = () => {
+    setShowEndConfirmModal(false)
+    endGame()
+  }
+
+  const handleEndGameCancel = () => {
+    setShowEndConfirmModal(false)
   }
 
 
@@ -481,61 +501,18 @@ export default function WordflowerGame() {
     setGameState('not-started')
     clearSavedGame()
     setShowStartModal(true)
-    setShowFeedbackModal(false)
-    setShowEndModal(false)
+    setShowEndConfirmModal(false)
     setCurrentWord("")
     setFoundWords([])
     // setHintLevel(0)
     // setCurrentHintWordIndex(0)
     setTimer(30 * 60) // Reset to 30 minutes
     setGameData(null)
-    
-    // Reset feedback form
-    setFeedbackForm({
-      satisfaction: 0,
-      mostDifficult: '',
-      willReturn: false
-    })
 
     if (intervalId) {
       clearInterval(intervalId)
       setIntervalId(null)
     }
-  }
-
-  // Handle feedback form submission
-  const handleFeedbackSubmit = async () => {
-    if (feedbackForm.satisfaction === 0 || feedbackForm.mostDifficult.trim() === '') {
-      toast.error("Please complete all required fields")
-      return
-    }
-
-    setIsSubmittingFeedback(true)
-
-    const feedback: GameFeedback = {
-      satisfaction: feedbackForm.satisfaction,
-      mostDifficult: feedbackForm.mostDifficult.trim(),
-      willReturn: feedbackForm.willReturn,
-      submittedAt: new Date()
-    }
-
-    const success = await submitFeedback(feedback)
-    
-    if (success) {
-      toast.success("Thank you for your feedback!")
-      setShowFeedbackModal(false)
-      setShowEndModal(true)
-      clearSavedGame()
-    } else {
-      toast.error("Failed to submit feedback. Please try again.")
-    }
-
-    setIsSubmittingFeedback(false)
-  }
-
-  // Check if feedback form is valid
-  const isFeedbackFormValid = () => {
-    return feedbackForm.satisfaction > 0 && feedbackForm.mostDifficult.trim() !== ''
   }
 
   const resumeGame = (saved: SavedGameState) => {
@@ -823,8 +800,7 @@ export default function WordflowerGame() {
             formatTime={formatTime}
             isTabVisible={isTabVisible}
             isMobile={isMobile}
-            onEndGame={endGame}
-            onShowEndModal={() => setShowEndModal(true)}
+            onEndGame={handleEndGameRequest}
             isEndingGame={isEndingGame}
           />
 
@@ -869,13 +845,12 @@ export default function WordflowerGame() {
       </div>
 
       {/* Modals */}
-      <FeedbackModal
-        isOpen={showFeedbackModal}
-        feedbackForm={feedbackForm}
-        setFeedbackForm={setFeedbackForm}
-        onSubmit={handleFeedbackSubmit}
-        isSubmitting={isSubmittingFeedback}
-        isValid={isFeedbackFormValid()}
+      <EndGameConfirmModal
+        isOpen={showEndConfirmModal}
+        onConfirm={handleEndGameConfirm}
+        onCancel={handleEndGameCancel}
+        timer={timer}
+        formatTime={formatTime}
       />
 
       <StartGameModal
@@ -886,21 +861,6 @@ export default function WordflowerGame() {
         onResumeGame={resumeGame}
         formatTime={formatTime}
         isStartingGame={isStartingGame}
-      />
-
-      <EndGameModal
-        isOpen={showEndModal}
-        onOpenChange={setShowEndModal}
-        foundWords={foundWords}
-        allWords={allWords}
-        gameData={gameData}
-        timer={getElapsedTime()}
-        formatTime={(seconds) => {
-          const mins = Math.floor(seconds / 60)
-          const secs = seconds % 60
-          return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-        }}
-        onPlayAgain={resetGame}
       />
 
       <Toaster />
