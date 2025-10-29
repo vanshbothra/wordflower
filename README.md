@@ -53,7 +53,8 @@ src/
 │   ├── use-media-query.ts       # Responsive design hook
 │   └── use-isomorphic-layout-effect.tsx
 └── data/
-    └── WordData.json            # Static word datasets
+    └── wordData.json            # Static word datasets
+    └── languages.json           # List of languages for the sign-up form
 ```
 
 ## 🎮 Game States & Flow
