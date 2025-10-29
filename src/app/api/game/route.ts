@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import data from '@/data/WordData.json'
+import data from '@/data/wordData.json'
 
 export async function POST(request: Request) {
   try {
