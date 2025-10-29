@@ -81,7 +81,7 @@ export default function SignInPage() {
 
   const handleRequestAccess = () => {
     setShowRequestModal(false)
-    router.push('/signup')
+    router.push('/info')
   }
 
   return (
@@ -125,42 +125,14 @@ export default function SignInPage() {
             </p>
             <Button 
               variant="outline" 
-              onClick={() => setShowRequestModal(true)}
+              onClick={handleRequestAccess}
               className="w-full"
             >
-              Request Access
+              Sign Up for the Experiment
             </Button>
           </div>
         </div>
       </div>
-
-      {/* Request Access Modal */}
-      <Dialog open={showRequestModal} onOpenChange={setShowRequestModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Request Access</DialogTitle>
-            <DialogDescription>
-              To participate in this study, you'll need to provide some basic information. 
-              Click below to fill out a short form and request your user ID.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex gap-2 mt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => setShowRequestModal(false)}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleRequestAccess}
-              className="flex-1"
-            >
-              Continue to Sign Up
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <Toaster />
     </div>
