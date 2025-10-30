@@ -168,6 +168,7 @@ export default function WordflowerGame() {
           gameMetadata: {
             totalWords: gameData.wordCount,
             wordsFound: wordsFoundRef.current,
+            foundWords: foundWords, // Store actual found words array
             totalTime: 30 * 60 - timerRef.current, // Elapsed time
             gameState: gameStateRef.current
           }
@@ -176,7 +177,7 @@ export default function WordflowerGame() {
     } catch (error) {
       console.error('Failed to update game metadata:', error)
     }
-  }, [gameData?.gameId, gameState, userId])
+  }, [gameData?.gameId, gameState, userId, foundWords])
 
   // Submit feedback to analytics
   const submitFeedback = useCallback(async (feedback: GameFeedback) => {
@@ -406,6 +407,33 @@ export default function WordflowerGame() {
       const newGame = await loadNewGame()
       if (!newGame) return
 
+      // Check if this game is already completed by the user
+      if (userId) {
+        const completionResponse = await fetch(`/api/game/completed?userId=${userId}&gameId=${newGame.gameId}`)
+        if (completionResponse.ok) {
+          const { isCompleted, gameSessionData } = await completionResponse.json()
+          
+          if (isCompleted) {
+            // Game already completed, redirect to results
+            toast.info("You've already completed this game! Redirecting to results...")
+            
+            // Store the completed game data in localStorage for results page
+            const resultsData = {
+              gameId: newGame.gameId,
+              foundWords: gameSessionData?.gameMetadata?.foundWords || [],
+              allWords: [], // We'll fetch this if needed
+              timer: gameSessionData?.gameMetadata?.totalTime || 0,
+              gameData: newGame,
+              timestamp: Date.now()
+            }
+            localStorage.setItem('wordflower_results', JSON.stringify(resultsData))
+            
+            router.push('/results')
+            return
+          }
+        }
+      }
+
       setGameState('playing')
       setShowStartModal(false)
       setTimer(30 * 60) // Reset to 30 minutes
@@ -463,6 +491,22 @@ export default function WordflowerGame() {
       })    
 
       const fetchedAllWords = await fetchAllWords()
+
+      // Mark game as completed for this user
+      if (userId && gameData) {
+        try {
+          await fetch('/api/analytics', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId,
+              gameId: gameData.gameId
+            })
+          })
+        } catch (error) {
+          console.error('Failed to mark game as completed:', error)
+        }
+      }
       
       // Store results data in localStorage for the results page
       const resultsData = {
@@ -515,7 +559,45 @@ export default function WordflowerGame() {
     }
   }
 
-  const resumeGame = (saved: SavedGameState) => {
+  const resumeGame = async (saved: SavedGameState) => {
+    // Check if this game is already completed by the user
+    if (userId) {
+      try {
+        const completionResponse = await fetch(`/api/game/completed?userId=${userId}&gameId=${saved.gameId}`)
+        if (completionResponse.ok) {
+          const { isCompleted, gameSessionData } = await completionResponse.json()
+          
+          if (isCompleted) {
+            // Game already completed, redirect to results
+            toast.info("This game was already completed! Redirecting to results...")
+            
+            // Store the completed game data in localStorage for results page
+            const resultsData = {
+              gameId: saved.gameId,
+              foundWords: gameSessionData?.gameMetadata?.foundWords || [],
+              allWords: [], // We'll fetch this if needed
+              timer: gameSessionData?.gameMetadata?.totalTime || 0,
+              gameData: {
+                gameId: saved.gameId,
+                centerLetter: saved.centerLetter,
+                outerLetters: saved.outerLetters,
+                wordCount: saved.wordCount,
+                pangramCount: saved.pangramCount
+              },
+              timestamp: Date.now()
+            }
+            localStorage.setItem('wordflower_results', JSON.stringify(resultsData))
+            
+            router.push('/results')
+            return
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check game completion:', error)
+        // Continue with resume if check fails
+      }
+    }
+
     setGameData({
       gameId: saved.gameId,
       centerLetter: saved.centerLetter,
