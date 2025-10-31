@@ -8,7 +8,6 @@ interface GameControlsProps {
   isTabVisible: boolean
   isMobile: boolean
   onEndGame: () => void
-  onShowEndModal: () => void
   isEndingGame?: boolean
 }
 
@@ -19,7 +18,6 @@ export function GameControls({
   isTabVisible,
   isMobile,
   onEndGame,
-  onShowEndModal,
   isEndingGame = false
 }: GameControlsProps) {
   if (isMobile) {
@@ -59,13 +57,6 @@ export function GameControls({
               ) : (
                 "End Game"
               )}
-            </Button>
-          </div>
-        )}
-        {gameState === 'ended' && (
-          <div className="text-center">
-            <Button onClick={onShowEndModal} variant="secondary" size="sm">
-              Game Ended - {formatTime(timer)}
             </Button>
           </div>
         )}

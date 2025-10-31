@@ -35,6 +35,7 @@ interface UserAnalytics {
   createdAt: Date
   updatedAt: Date
   gameSessions: GameSession[]
+  completedGameIds: string[] // Track completed game IDs
 }
 
 export async function POST(request: NextRequest) {
@@ -109,7 +110,8 @@ export async function POST(request: NextRequest) {
         userId,
         createdAt: new Date(),
         updatedAt: new Date(),
-        gameSessions: [newGameSession]
+        gameSessions: [newGameSession],
+        completedGameIds: []
       }
       
       await collection.insertOne(newUserAnalytics as any)
@@ -234,6 +236,45 @@ export async function PATCH(request: NextRequest) {
     console.error('Analytics metadata update error:', error)
     return NextResponse.json(
       { error: 'Failed to update game metadata' },
+      { status: 500 }
+    )
+  }
+}
+
+// Mark game as completed
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { userId, gameId } = body
+
+    if (!userId || !gameId) {
+      return NextResponse.json(
+        { error: 'Missing required fields: userId and gameId' },
+        { status: 400 }
+      )
+    }
+
+    const collection = await getCollection('wordflower_collection')
+    
+    // Add gameId to completedGameIds array if not already present
+    const result = await collection.updateOne(
+      { userId },
+      {
+        $addToSet: { completedGameIds: gameId },
+        $set: { updatedAt: new Date() },
+        $setOnInsert: { 
+          createdAt: new Date(),
+          gameSessions: []
+        }
+      },
+      { upsert: true } // Create user document if it doesn't exist
+    )
+
+    return NextResponse.json({ success: true, modified: result.modifiedCount > 0 })
+  } catch (error) {
+    console.error('Mark game completed error:', error)
+    return NextResponse.json(
+      { error: 'Failed to mark game as completed' },
       { status: 500 }
     )
   }

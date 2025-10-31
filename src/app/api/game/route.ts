@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import data from '@/data/WordData.json'
+import data from '@/data/wordData.json'
 
 export async function POST(request: Request) {
   try {
-    const randomId = data[Math.floor(Math.random() * data.length)].id
+    const randomId = 7
 
     const gameData = data.find(g => g.id === randomId)
     // // Cleanup games older than 24 hours

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Loader2 } from "lucide-react"
+import { useState } from "react"
 
 interface SavedGameState {
   gameId: string
@@ -20,7 +21,7 @@ interface StartGameModalProps {
   onOpenChange: (open: boolean) => void
   savedGame: SavedGameState | null
   onStartNewGame: () => void
-  onResumeGame: (savedGame: SavedGameState) => void
+  onResumeGame: (savedGame: SavedGameState) => Promise<void>
   formatTime: (seconds: number) => string
   isStartingGame?: boolean
 }
@@ -34,6 +35,19 @@ export function StartGameModal({
   formatTime,
   isStartingGame = false
 }: StartGameModalProps) {
+  const [isResuming, setIsResuming] = useState(false)
+
+  const handleResumeGame = async () => {
+    if (!savedGame) return
+    
+    setIsResuming(true)
+    try {
+      await onResumeGame(savedGame)
+    } finally {
+      setIsResuming(false)
+    }
+  }
+
   // Format elapsed time for saved game display
   const formatElapsedTime = (remainingSeconds: number) => {
     const elapsedSeconds = 30 * 60 - remainingSeconds
@@ -95,11 +109,18 @@ export function StartGameModal({
                 )}
               </Button>
               <Button 
-                onClick={() => onResumeGame(savedGame)} 
+                onClick={handleResumeGame}
                 className="flex-1"
-                disabled={isStartingGame}
+                disabled={isStartingGame || isResuming}
               >
-                Resume Game
+                {isResuming ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Checking...
+                  </>
+                ) : (
+                  "Resume Game"
+                )}
               </Button>
             </>
           ) : (
