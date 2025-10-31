@@ -39,6 +39,7 @@ export default function ResultsPage() {
   const [timer, setTimer] = useState(0)
   const [userId, setUserId] = useState<string | null>(null)
   const [gameId, setGameId] = useState<string | null>(null)
+  const [isAlreadyCompleted, setIsAlreadyCompleted] = useState(false)
   
   // Feedback form state
   const [feedbackForm, setFeedbackForm] = useState<FeedbackForm>({
@@ -58,10 +59,18 @@ export default function ResultsPage() {
 
   // Initialize data from localStorage
   useEffect(() => {
+    // Check URL params first to see if this is a redirect for already completed game
+    const urlParams = new URLSearchParams(window.location.search)
+    const alreadyCompleted = urlParams.get('completed') === 'true'
+
     const resultsData = localStorage.getItem('wordflower_results')
     if (resultsData) {
       try {
         const data = JSON.parse(resultsData)
+        
+        // Check if this is marked as already completed (URL param or localStorage flag)
+        setIsAlreadyCompleted(alreadyCompleted || data.isAlreadyCompleted || false)
+        
         setFoundWords(data.foundWords || [])
         setAllWords(data.allWords || [])
         setGameData(data.gameData)
@@ -175,19 +184,42 @@ export default function ResultsPage() {
       <div className="max-w-6xl mx-auto">
         <header className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2">🌻 Wordflower</h1>
-          <h2 className="text-2xl font-semibold">Game Results</h2>
+          <h2 className="text-2xl font-semibold">
+            {isAlreadyCompleted ? "Thank You!" : "Game Results"}
+          </h2>
         </header>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Feedback Form - Left Side */}
-          <Card className="p-6">
-            <h3 className="text-xl font-semibold mb-4">🌻 Game Feedback</h3>
-            
-            {!feedbackSubmitted ? (
-              <div className="space-y-6">
-                <p className="text-muted-foreground">
-                  Help us improve your experience! Please share your thoughts about this game.
-                </p>
+        {isAlreadyCompleted ? (
+          // Show only thank you message for already completed games
+          <Card className="p-8 text-center max-w-2xl mx-auto">
+            <div className="space-y-6">
+              <div className="text-6xl mb-4">🎉</div>
+              <h3 className="text-2xl font-semibold">Thank You for Participating!</h3>
+              <p className="text-lg text-muted-foreground">
+                You have already completed this game. Thank you for your continued interest in our study!
+              </p>
+              <p className="text-muted-foreground">
+                Your previous participation and feedback are valuable to our research.
+              </p>
+              <div className="pt-4">
+                <Button onClick={handleReturnToGame} size="lg">
+                  Return to Game
+                </Button>
+              </div>
+            </div>
+          </Card>
+        ) : (
+          // Show full results and feedback for fresh completions
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Feedback Form - Left Side */}
+            <Card className="p-6">
+              <h3 className="text-xl font-semibold mb-4">🌻 Game Feedback</h3>
+              
+              {!feedbackSubmitted ? (
+                <div className="space-y-6">
+                  <p className="text-muted-foreground">
+                    Help us improve your experience! Please share your thoughts about this game.
+                  </p>
                 
                 {/* Satisfaction Rating */}
                 <div className="space-y-3">
@@ -337,7 +369,8 @@ export default function ResultsPage() {
               </div>
             </div>
           </Card>
-        </div>
+          </div>
+        )}
       </div>
       
       <Toaster />

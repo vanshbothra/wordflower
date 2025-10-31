@@ -424,11 +424,12 @@ export default function WordflowerGame() {
               allWords: [], // We'll fetch this if needed
               timer: gameSessionData?.gameMetadata?.totalTime || 0,
               gameData: newGame,
-              timestamp: Date.now()
+              timestamp: Date.now(),
+              isAlreadyCompleted: true // Mark as already completed
             }
             localStorage.setItem('wordflower_results', JSON.stringify(resultsData))
             
-            router.push('/results')
+            router.push('/results?completed=true')
             return
           }
         }
@@ -584,11 +585,12 @@ export default function WordflowerGame() {
                 wordCount: saved.wordCount,
                 pangramCount: saved.pangramCount
               },
-              timestamp: Date.now()
+              timestamp: Date.now(),
+              isAlreadyCompleted: true // Mark as already completed
             }
             localStorage.setItem('wordflower_results', JSON.stringify(resultsData))
             
-            router.push('/results')
+            router.push('/results?completed=true')
             return
           }
         }
