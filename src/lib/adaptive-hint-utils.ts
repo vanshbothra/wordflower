@@ -1,7 +1,7 @@
 import type { WordHints } from "@/lib/word-data"
 
 // Configurable inactivity threshold in seconds
-export const ADAPTIVE_HINT_INACTIVITY_THRESHOLD = 15
+export const ADAPTIVE_HINT_INACTIVITY_THRESHOLD = 80
 
 // --- Strategy 2: Three-letter prefix counts ---
 
