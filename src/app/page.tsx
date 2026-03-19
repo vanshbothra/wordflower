@@ -572,7 +572,7 @@ export default function WordflowerGame() {
           const currentFoundWords = foundWordsRef.current
           const currentElapsedTime = 30 * 60 - timerRef.current
 
-          await fetch('/api/analytics/results', {
+          const res = await fetch('/api/analytics/results', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -587,6 +587,10 @@ export default function WordflowerGame() {
               }
             })
           })
+
+          if (!res.ok) {
+            console.error('Failed to store game results with status:', res.status)
+          }
         } catch (error) {
           console.error('Failed to store game results:', error)
         }

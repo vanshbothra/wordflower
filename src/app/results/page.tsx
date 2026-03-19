@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"  
+import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Star } from "lucide-react"
 import { toast } from "sonner"
@@ -28,50 +28,45 @@ interface GameResults {
 interface FeedbackForm {
   satisfaction: number
   mostDifficult: string
-  willReturn: boolean
-  happyMoments?: string
-  frustratingMoments?: string
   improvementSuggestion?: string
-  willReturnReason?: string
+  breakHelpful?: string
+  stuckStrategy?: string
 }
 
 interface GameFeedback {
   satisfaction: number // 1-5 scale
   mostDifficult: string
-  willReturn: boolean
-  happyMoments?: string
-  frustratingMoments?: string
   improvementSuggestion?: string
-  willReturnReason?: string
+  breakHelpful?: string
+  stuckStrategy?: string
   submittedAt: Date
 }
 
 function ResultsPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  
+
   // State management
   const [userId, setUserId] = useState<string | null>(null)
   const [gameId, setGameId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
+
   // Feedback state
   const [existingFeedback, setExistingFeedback] = useState<GameFeedback | null>(null)
   const [feedbackForm, setFeedbackForm] = useState<FeedbackForm>({
     satisfaction: 0,
     mostDifficult: '',
-    willReturn: true,
-    happyMoments: '',
-    frustratingMoments: '',
     improvementSuggestion: '',
-    willReturnReason: ''
+    breakHelpful: '',
+    stuckStrategy: ''
   })
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
-  
+
   // Results state
   const [gameResults, setGameResults] = useState<GameResults | null>(null)
+  const [resultsError, setResultsError] = useState<string | null>(null)
 
   // Function to return to main page
   const handleReturnToGame = () => {
@@ -103,7 +98,7 @@ function ResultsPageContent() {
 
         // Check if feedback already exists for this game
         await checkExistingFeedback(userIdFromStorage, gameIdParam)
-        
+
       } catch (error) {
         console.error('Initialization error:', error)
         setError('Failed to initialize page')
@@ -119,7 +114,7 @@ function ResultsPageContent() {
   const checkExistingFeedback = async (userId: string, gameId: string) => {
     try {
       const response = await fetch(`/api/analytics/feedback?userId=${userId}&gameId=${gameId}`)
-      
+
       if (response.ok) {
         const data = await response.json()
         if (data.feedback) {
@@ -140,24 +135,40 @@ function ResultsPageContent() {
     }
   }
 
-  // Fetch game results from database
-  const fetchGameResults = async (userId: string, gameId: string) => {
-    try {
-      const response = await fetch(`/api/analytics/results?userId=${userId}&gameId=${gameId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      })
+  // Fetch game results from database (with retry for timing issues)
+  const fetchGameResults = async (userId: string, gameId: string, retries = 3) => {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        // Add a small delay before retrying to allow the results POST to commit
+        if (attempt > 0) {
+          await new Promise(resolve => setTimeout(resolve, 1500 * attempt))
+        }
 
-      if (response.ok) {
-        const results = await response.json()
-        setGameResults(results)
-      } else {
-        console.error('Failed to fetch results:', response.status)
-        setError('Failed to load game results')
+        const response = await fetch(`/api/analytics/results?userId=${userId}&gameId=${gameId}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        })
+
+        if (response.ok) {
+          const results = await response.json()
+          setGameResults(results)
+          setResultsError(null)
+          return
+        } else if (response.status === 404 && attempt < retries - 1) {
+          // Results not stored yet, retry
+          console.warn(`Results not found (attempt ${attempt + 1}), retrying...`)
+          continue
+        } else {
+          console.error('Failed to fetch results:', response.status)
+          setResultsError('Results could not be loaded. Your game data has been saved.')
+          return
+        }
+      } catch (error) {
+        console.error('Error fetching results:', error)
+        if (attempt === retries - 1) {
+          setResultsError('Results could not be loaded. Your game data has been saved.')
+        }
       }
-    } catch (error) {
-      console.error('Error fetching results:', error)
-      setError('Failed to load game results')
     }
   }
 
@@ -199,26 +210,24 @@ function ResultsPageContent() {
     const feedback: GameFeedback = {
       satisfaction: feedbackForm.satisfaction,
       mostDifficult: feedbackForm.mostDifficult.trim(),
-      willReturn: feedbackForm.willReturn,
-      happyMoments: feedbackForm.happyMoments?.trim(),
-      frustratingMoments: feedbackForm.frustratingMoments?.trim(),
       improvementSuggestion: feedbackForm.improvementSuggestion?.trim(),
-      willReturnReason: feedbackForm.willReturnReason?.trim(),
+      breakHelpful: feedbackForm.breakHelpful?.trim(),
+      stuckStrategy: feedbackForm.stuckStrategy?.trim(),
       submittedAt: new Date()
     }
 
     const success = await submitFeedback(feedback)
-    
+
     if (success) {
       toast.success("Thank you for your feedback!")
       setFeedbackSubmitted(true)
       setExistingFeedback(feedback)
-      
+
       // Now fetch the results since feedback is submitted
       if (userId && gameId) {
         await fetchGameResults(userId, gameId)
       }
-      
+
       // Clear saved game
       localStorage.removeItem('wordflower_game')
     } else {
@@ -230,7 +239,13 @@ function ResultsPageContent() {
 
   // Check if feedback form is valid
   const isFeedbackFormValid = () => {
-    return feedbackForm.satisfaction > 0 && feedbackForm.mostDifficult.trim() !== ''
+    return (
+      feedbackForm.satisfaction > 0 &&
+      feedbackForm.mostDifficult.trim() !== '' &&
+      feedbackForm.improvementSuggestion?.trim() !== '' &&
+      feedbackForm.breakHelpful?.trim() !== '' &&
+      feedbackForm.stuckStrategy?.trim() !== ''
+    )
   }
 
   // Format timer display
@@ -281,7 +296,7 @@ function ResultsPageContent() {
               <p className="text-muted-foreground text-center">
                 Before viewing your results, please help us improve your experience by sharing your thoughts about this game.
               </p>
-            
+
               {/* Satisfaction Rating */}
               <div className="space-y-3">
                 <label className="text-sm font-medium">
@@ -293,14 +308,13 @@ function ResultsPageContent() {
                       key={rating}
                       type="button"
                       onClick={() => setFeedbackForm(prev => ({ ...prev, satisfaction: rating }))}
-                      className={`p-2 rounded-lg transition-colors ${
-                        feedbackForm.satisfaction >= rating
-                          ? 'text-yellow-500'
-                          : 'text-gray-300 hover:text-yellow-400'
-                      }`}
+                      className={`p-2 rounded-lg transition-colors ${feedbackForm.satisfaction >= rating
+                        ? 'text-yellow-500'
+                        : 'text-gray-300 hover:text-yellow-400'
+                        }`}
                     >
-                      <Star 
-                        size={28} 
+                      <Star
+                        size={28}
                         fill={feedbackForm.satisfaction >= rating ? 'currentColor' : 'none'}
                       />
                     </button>
@@ -317,9 +331,9 @@ function ResultsPageContent() {
 
               {/* Thinking Process Question */}
               <div className="space-y-3 flex flex-col gap-1">
-                  <label className="text-sm font-medium" htmlFor="thinkingProcess">
-                    Could you walk us through what was happening in your head while you were trying to find words? <span className="text-red-500">*</span>
-                  </label>
+                <label className="text-sm font-medium" htmlFor="thinkingProcess">
+                  Could you walk us through what was happening in your head while you were trying to find words? <span className="text-red-500">*</span>
+                </label>
                 <textarea
                   id="thinkingProcess"
                   value={feedbackForm.mostDifficult}
@@ -330,31 +344,31 @@ function ResultsPageContent() {
                 />
               </div>
 
-              {/* Happy/Clever Moments */}
+              {/* Break Helpful Question */}
               <div className="space-y-3 flex flex-col gap-1">
-                <label className="text-sm font-medium" htmlFor="happyMoments">
-                  Was there any moment where you felt genuinely happy, clever, or satisfied while playing? Describe what happened.
+                <label className="text-sm font-medium" htmlFor="breakHelpful">
+                  Do you feel like the break helped your gameplay? <span className="text-red-500">*</span>
                 </label>
                 <textarea
-                  id="happyMoments"
-                  value={feedbackForm.happyMoments || ''}
-                  onChange={(e) => setFeedbackForm(prev => ({ ...prev, happyMoments: e.target.value }))}
-                  placeholder="Describe moments of satisfaction, cleverness, or happiness during the game..."
+                  id="breakHelpful"
+                  value={feedbackForm.breakHelpful || ''}
+                  onChange={(e) => setFeedbackForm(prev => ({ ...prev, breakHelpful: e.target.value }))}
+                  placeholder="Let us know how you felt about the break"
                   className="w-full p-3 border rounded-lg resize-none h-20 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
                   maxLength={300}
                 />
               </div>
 
-              {/* Frustrating Moments */}
+              {/* Stuck Strategy Question */}
               <div className="space-y-3 flex flex-col gap-1">
-                <label className="text-sm font-medium" htmlFor="frustratingMoments">
-                  Was there any moment that felt unfair, frustrating, or demotivating? What happened and why did it bother you?
+                <label className="text-sm font-medium" htmlFor="stuckStrategy">
+                  What do you typically do when you feel stuck? <span className="text-red-500">*</span>
                 </label>
                 <textarea
-                  id="frustratingMoments"
-                  value={feedbackForm.frustratingMoments || ''}
-                  onChange={(e) => setFeedbackForm(prev => ({ ...prev, frustratingMoments: e.target.value }))}
-                  placeholder="Describe any frustrating or unfair moments and what caused them..."
+                  id="stuckStrategy"
+                  value={feedbackForm.stuckStrategy || ''}
+                  onChange={(e) => setFeedbackForm(prev => ({ ...prev, stuckStrategy: e.target.value }))}
+                  placeholder="Tell us what helps you when you hit a wall"
                   className="w-full p-3 border rounded-lg resize-none h-20 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
                   maxLength={300}
                 />
@@ -363,7 +377,7 @@ function ResultsPageContent() {
               {/* Improvement Suggestion */}
               <div className="space-y-3 flex flex-col gap-1">
                 <label className="text-sm font-medium" htmlFor="improvementSuggestion">
-                  If you could change one thing about the game to make it more fun or less annoying for you personally, what would you change first?
+                  If you could change one thing about the game to make it more fun or less annoying for you personally, what would you change first? <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   id="improvementSuggestion"
@@ -375,44 +389,7 @@ function ResultsPageContent() {
                 />
               </div>
 
-              {/* Will Return Question */}
-              <div className="space-y-3 flex flex-col gap-1">
-                <label className="text-sm font-medium">
-                  Would you play Wordflower again on your own, without being asked to? Why or why not?
-                </label>
-                <div className="flex gap-4 justify-start mb-3">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="willReturn"
-                      checked={feedbackForm.willReturn === true}
-                      onChange={() => setFeedbackForm(prev => ({ ...prev, willReturn: true }))}
-                      className="text-primary focus:ring-primary"
-                    />
-                    <span className="text-sm">Yes, definitely!</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="willReturn"
-                      checked={feedbackForm.willReturn === false}
-                      onChange={() => setFeedbackForm(prev => ({ ...prev, willReturn: false }))}
-                      className="text-primary focus:ring-primary"
-                    />
-                    <span className="text-sm">Probably not</span>
-                  </label>
-                </div>
-                <textarea
-                  id="willReturnReason"
-                  value={feedbackForm.willReturnReason || ''}
-                  onChange={(e) => setFeedbackForm(prev => ({ ...prev, willReturnReason: e.target.value }))}
-                  placeholder="Please explain your reasoning..."
-                  className="w-full p-3 border rounded-lg resize-none h-16 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
-                  maxLength={200}
-                />
-              </div>
-
-              <Button 
+              <Button
                 onClick={handleFeedbackSubmit}
                 disabled={!isFeedbackFormValid() || isSubmittingFeedback}
                 className="w-full"
@@ -492,7 +469,7 @@ function ResultsPageContent() {
                     </div>
                   </div>
                 )}
-                
+
                 {/* <div className="pt-4 text-center">
                   <Button onClick={handleReturnToGame} size="lg" className="w-full">
                     Play Again
@@ -501,6 +478,15 @@ function ResultsPageContent() {
               </div>
             </Card>
           </div>
+        ) : resultsError ? (
+          // Results fetch failed
+          <Card className="p-8 text-center max-w-2xl mx-auto">
+            <div className="space-y-4">
+              <div className="text-4xl">🎉</div>
+              <h3 className="text-xl font-semibold">Thank you for your feedback!</h3>
+              <p className="text-muted-foreground">{resultsError}</p>
+            </div>
+          </Card>
         ) : (
           // Loading results state
           <Card className="p-8 text-center max-w-2xl mx-auto">
@@ -513,7 +499,7 @@ function ResultsPageContent() {
           </Card>
         )}
       </div>
-      
+
       <Toaster />
     </div>
   )

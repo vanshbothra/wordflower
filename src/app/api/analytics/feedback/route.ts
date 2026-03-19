@@ -5,11 +5,9 @@ import { getCollection } from '@/lib/mongodb'
 interface GameFeedback {
   satisfaction: number
   mostDifficult: string
-  willReturn: boolean
-  happyMoments?: string
-  frustratingMoments?: string
-  improvementSuggestion?: string
-  willReturnReason?: string
+  improvementSuggestion: string
+  breakHelpful: string
+  stuckStrategy: string
   submittedAt: Date
 }
 
@@ -25,14 +23,34 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const { satisfaction, mostDifficult, improvementSuggestion, breakHelpful, stuckStrategy } = feedback
+
+    if (
+      satisfaction === undefined ||
+      !mostDifficult ||
+      !improvementSuggestion ||
+      !breakHelpful ||
+      !stuckStrategy
+    ) {
+      return NextResponse.json(
+        { error: 'Missing required fields inside feedback' },
+        { status: 400 }
+      )
+    }
+
     // Validate feedback structure
     if (
-      typeof feedback.satisfaction !== 'number' ||
-      feedback.satisfaction < 1 ||
-      feedback.satisfaction > 5 ||
-      typeof feedback.mostDifficult !== 'string' ||
-      feedback.mostDifficult.trim() === '' ||
-      typeof feedback.willReturn !== 'boolean'
+      typeof satisfaction !== 'number' ||
+      satisfaction < 1 ||
+      satisfaction > 5 ||
+      typeof mostDifficult !== 'string' ||
+      mostDifficult.trim() === '' ||
+      typeof improvementSuggestion !== 'string' ||
+      improvementSuggestion.trim() === '' ||
+      typeof breakHelpful !== 'string' ||
+      breakHelpful.trim() === '' ||
+      typeof stuckStrategy !== 'string' ||
+      stuckStrategy.trim() === ''
     ) {
       return NextResponse.json(
         { error: 'Invalid feedback data structure' },
@@ -41,26 +59,24 @@ export async function POST(request: NextRequest) {
     }
 
     const collection = await getCollection('wordflower_collection')
-    
+
     const feedbackData: GameFeedback = {
-      satisfaction: feedback.satisfaction,
-      mostDifficult: feedback.mostDifficult.trim(),
-      willReturn: feedback.willReturn,
-      happyMoments: feedback.happyMoments?.trim(),
-      frustratingMoments: feedback.frustratingMoments?.trim(),
-      improvementSuggestion: feedback.improvementSuggestion?.trim(),
-      willReturnReason: feedback.willReturnReason?.trim(),
+      satisfaction,
+      mostDifficult: mostDifficult.trim(),
+      improvementSuggestion: improvementSuggestion.trim(),
+      breakHelpful: breakHelpful.trim(),
+      stuckStrategy: stuckStrategy.trim(),
       submittedAt: new Date()
     }
 
     // Update the specific game session with feedback
     const result = await collection.updateOne(
-      { 
+      {
         userId,
         'gameSessions.gameId': gameId
       },
       {
-        $set: { 
+        $set: {
           'gameSessions.$.feedback': feedbackData,
           'gameSessions.$.updatedAt': new Date(),
           updatedAt: new Date()
@@ -75,8 +91,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: 'Feedback submitted successfully',
       feedback: feedbackData
     })
@@ -117,14 +133,14 @@ export async function GET(request: NextRequest) {
       const gameSession = userAnalytics.gameSessions?.find(
         (session: any) => session.gameId === gameId
       )
-      
+
       if (!gameSession) {
         return NextResponse.json(
           { error: 'Game session not found' },
           { status: 404 }
         )
       }
-      
+
       return NextResponse.json({
         gameId: gameSession.gameId,
         feedback: gameSession.feedback || null
