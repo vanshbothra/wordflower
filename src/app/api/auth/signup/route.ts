@@ -59,7 +59,8 @@ export async function POST(request: NextRequest) {
     }
 
     const collection = await getCollection('requests')
-    
+    const usersCollection = await getCollection('users')
+
     // Check if email already exists in requests
     const existingRequest = await collection.findOne({ email: email.toLowerCase() })
     if (existingRequest) {
@@ -85,7 +86,25 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await collection.insertOne(signupRequest)
-    
+
+    // Generate unique 6-character alphanumeric userid
+    let userId = '';
+    let isUnique = false;
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    while (!isUnique) {
+      userId = '';
+      for (let i = 0; i < 6; i++) {
+        userId += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      const existingUser = await usersCollection.findOne({ user: userId });
+      if (!existingUser) {
+        isUnique = true;
+      }
+    }
+
+    // Insert into users collection
+    await usersCollection.insertOne({ user: userId });
+
     // Send notification email to admin addresses (if configured)
     try {
       const adminListRaw = process.env.ADMIN_EMAILS || ''
@@ -104,28 +123,52 @@ export async function POST(request: NextRequest) {
           }
         })
 
-        const subject = `New Wordflower signup: ${signupRequest.firstName} ${signupRequest.lastName}`
+        const subject = `Wordflower Study Registration - Thank You, ${signupRequest.firstName}!`
         const htmlBody = `
-          <h2>New signup request</h2>
-          <ul>
-            <li><strong>Name:</strong> ${signupRequest.firstName} ${signupRequest.lastName}</li>
-            <li><strong>Email:</strong> ${signupRequest.email}</li>
-            <li><strong>Age:</strong> ${signupRequest.age}</li>
-            <li><strong>Gender:</strong> ${signupRequest.gender}</li>
-            <li><strong>Education:</strong> ${signupRequest.education}</li>
-            <li><strong>Occupation:</strong> ${signupRequest.occupation}</li>
-            <li><strong>Native language:</strong> ${signupRequest.nativeLanguage}</li>
-            <li><strong>English proficiency:</strong> ${signupRequest.englishProficiency}</li>
-            <li><strong>Submitted At:</strong> ${new Date(signupRequest.submittedAt).toLocaleString()}</li>
-          </ul>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6;">
+            <div style="background-color: #f8f9fa; padding: 25px; border-radius: 10px; border: 1px solid #e9ecef;">
+              <h2 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">Thank you for participating!</h2>
+              <p style="font-size: 16px;">Hi ${signupRequest.firstName},</p>
+              <p style="font-size: 15px;">Thank you so much for registering for the <strong>Wordflower Study</strong>. We deeply appreciate your time and participation.</p>
+              
+              <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #3498db; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <h3 style="margin-top: 0; color: #2c3e50; font-size: 18px;">Your Registration Details</h3>
+                <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 15px;">
+                  <li style="padding: 6px 0; border-bottom: 1px solid #f0f0f0;"><strong>Name:</strong> ${signupRequest.firstName} ${signupRequest.lastName}</li>
+                  <li style="padding: 6px 0; border-bottom: 1px solid #f0f0f0;"><strong>Email:</strong> ${signupRequest.email}</li>
+                  <li style="padding: 6px 0; border-bottom: 1px solid #f0f0f0;"><strong>Age:</strong> ${signupRequest.age}</li>
+                  <li style="padding: 6px 0; border-bottom: 1px solid #f0f0f0;"><strong>Gender:</strong> ${signupRequest.gender}</li>
+                  <li style="padding: 6px 0; border-bottom: 1px solid #f0f0f0;"><strong>Education:</strong> ${signupRequest.education}</li>
+                  <li style="padding: 6px 0; border-bottom: 1px solid #f0f0f0;"><strong>Occupation:</strong> ${signupRequest.occupation}</li>
+                  <li style="padding: 6px 0; border-bottom: 1px solid #f0f0f0;"><strong>Native language:</strong> ${signupRequest.nativeLanguage}</li>
+                  <li style="padding: 6px 0; border-bottom: 1px solid #f0f0f0;"><strong>English proficiency:</strong> ${signupRequest.englishProficiency}</li>
+                  <li style="padding: 6px 0;"><strong>Submitted At:</strong> ${new Date(signupRequest.submittedAt).toLocaleString()}</li>
+                </ul>
+              </div>
+
+              <div style="background-color: #e8f4f8; padding: 20px; border-radius: 8px; text-align: center; margin: 25px 0; border: 1px solid #bce8f1;">
+                <p style="margin: 0; font-size: 16px; color: #31708f;"><strong>Your Auto-Generated User ID:</strong></p>
+                <div style="background-color: #ffffff; display: inline-block; padding: 10px 25px; border-radius: 6px; margin: 15px 0; border: 2px dashed #3498db;">
+                  <span style="font-size: 26px; font-weight: bold; color: #2c3e50; letter-spacing: 3px; font-family: monospace;">${userId}</span>
+                </div>
+                <p style="font-size: 14px; color: #666; margin: 0;">Please keep this ID for your records and future reference.</p>
+              </div>
+
+              <p style="color: #777; font-size: 14px; margin-top: 30px; text-align: center; border-top: 1px solid #e9ecef; padding-top: 20px;">
+                If you have any questions, feel free to reply to this email.<br><br>
+                Thank you again from the <strong>Wordflower Team</strong>!
+              </p>
+            </div>
+          </div>
         `
         // const fromHeader = `Wordflower Study <${mailUser}>`;
         await transporter.sendMail({
           from: `Wordflower Study <${mailUser}>`,
-          to: adminEmails,
+          to: signupRequest.email,
+          cc: adminEmails,
           subject,
           html: htmlBody,
-          replyTo: signupRequest.email
+          replyTo: adminEmails
         })
       }
     } catch (emailErr) {
@@ -133,8 +176,8 @@ export async function POST(request: NextRequest) {
       // do not fail the request because email failed
     }
     if (result.insertedId) {
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         message: 'Signup request submitted successfully',
         requestId: result.insertedId
       })
@@ -156,7 +199,7 @@ export async function GET(request: NextRequest) {
     const email = searchParams.get('email')
 
     const collection = await getCollection('requests')
-    
+
     if (email) {
       // Get specific request by email
       const request = await collection.findOne({ email: email.toLowerCase() })
