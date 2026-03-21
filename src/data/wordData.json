@@ -1800,6 +1800,46 @@
     ],
     "wordcount": 41,
     "pangramcount": 1
+  },
+  {
+    "id": 31,
+    "letters": [
+      "P",
+      "C",
+      "N",
+      "A",
+      "I",
+      "L"
+    ],
+    "central": "R",
+    "words": [
+      "LIAR",
+      "CRANIAL",
+      "LAIR",
+      "NARC",
+      "PAIR",
+      "CIRCA",
+      "CIRRI",
+      "ARCANA",
+      "RAILCAR",
+      "ARANCINI",
+      "RAIN",
+      "RACIAL",
+      "ARIA",
+      "RAIL",
+      "PILLAR",
+      "PLANAR",
+      "CARNAL",
+      "CAIRN",
+      "CARPAL",
+      "CARP",
+      "RICIN",
+      "CRAP"
+    ],
+    "pangrams": [
+      "PRINCIPAL"
+    ],
+    "wordcount": 23,
+    "pangramcount": 1
   }
-
 ]
