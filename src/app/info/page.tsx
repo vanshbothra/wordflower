@@ -42,16 +42,14 @@ export default function ExperimentInfoPage() {
                     </p>
                     <br />
                     <p>
-                       You will now play a round of the Wordflower game. <strong>Please play this game on your own and do not use any external resources.</strong> Please answer brief surveys before and after the session. The total duration for playing the game is{" "}
-                        <strong>30 minutes</strong>. Since the timer cannot be paused, we recommend that you set
-                        aside time accordingly, as breaks in between will not be possible.
+                        You will now play a round of the Wordflower game. <strong>Please play this game on your own and do not use any external resources.</strong> Please answer brief surveys before and after the session. The total duration for playing the game is{" "}
+                        <strong>30 minutes</strong>. You will be given a break in between the game, in which you will have to perform a small task. This break will last for 5 minutes.
                     </p>
                     <br />
                     <p>
                         Data collected will remain private and confidential, and only the research team will have
                         access to your information. No personally identifying information will appear in any
                         publication or presentation.
-
 
                         Data collected includes: </p>
                     <ul className="list-disc list-inside space-y-1 text-muted-foreground">

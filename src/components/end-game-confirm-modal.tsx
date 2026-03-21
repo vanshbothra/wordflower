@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { formatTime } from "@/lib/utils"
 import { AlertTriangle } from "lucide-react"
 
 interface EndGameConfirmModalProps {
@@ -7,15 +8,13 @@ interface EndGameConfirmModalProps {
   onConfirm: () => void
   onCancel: () => void
   timer: number
-  formatTime: (seconds: number) => string
 }
 
 export function EndGameConfirmModal({
   isOpen,
   onConfirm,
   onCancel,
-  timer,
-  formatTime
+  timer
 }: EndGameConfirmModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
