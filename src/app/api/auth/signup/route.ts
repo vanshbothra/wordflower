@@ -102,9 +102,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Round-robin gameType: 1 → 2 → 3 → 1 → 2 → 3 …
+    // Round-robin gameType: [1] → [2] → [3] → [1] → [2] → [3] …
     const lastUser = await usersCollection.findOne({}, { sort: { _id: -1 } });
-    const nextGameType = ((lastUser?.gameType ?? 0) % 3) + 1;
+    const lastType = Array.isArray(lastUser?.gameType) ? lastUser.gameType[0] : (lastUser?.gameType ?? 0);
+    const nextGameType = [(lastType % 3) + 1];
 
     // Insert into thesis_users collection
     await usersCollection.insertOne({ user: userId, gameType: nextGameType });
