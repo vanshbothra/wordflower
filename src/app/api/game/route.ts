@@ -3,7 +3,7 @@ import data from '@/data/wordData.json'
 
 export async function POST(request: Request) {
   try {
-    const randomId = 3
+    const randomId = 31
 
     const gameData = data.find(g => g.id === randomId)
     // // Cleanup games older than 24 hours
