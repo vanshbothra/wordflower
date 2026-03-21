@@ -5,57 +5,80 @@ import { getCollection } from '@/lib/mongodb'
 // Results interface
 
 interface GameResults {
-    foundWords: string[],
-    allWords?: string[],
-    timer: number,
-    gameData: any,
-    timestamp: Date
+  foundWords: string[],
+  allWords?: string[],
+  timer: number,
+  gameData: any,
+  timestamp: Date
 }
 
 export async function POST(request: NextRequest) {
-    try {
-        const body = await request.json()
-        const { userId, gameId, results } = body
+  try {
+    const body = await request.json()
+    const { userId, gameId, results } = body
 
-        if (!userId || !gameId || !results) {
-            return NextResponse.json(
-                { error: 'Missing required fields: userId, gameId and results' },
-                { status: 400 }
-            )
-        }
-
-        const collection = await getCollection('wordflower_collection')
-
-        // Find the user and update the specific game session's results
-        const result = await collection.updateOne(
-            {
-                userId,
-                'gameSessions.gameId': gameId
-            },
-            {
-                $set: {
-                    'gameSessions.$.results': results,
-                    'gameSessions.$.updatedAt': new Date(),
-                    updatedAt: new Date()
-                }
-            }
-        )
-
-        if (result.matchedCount === 0) {
-            return NextResponse.json(
-                { error: 'User or game session not found' },
-                { status: 404 }
-            )
-        }
-
-        return NextResponse.json({ success: true })
-    } catch (error) {
-        console.error('Game results logging error:', error)
-        return NextResponse.json(
-            { error: 'Failed to log game results' },
-            { status: 500 }
-        )
+    if (!userId || !gameId || !results) {
+      return NextResponse.json(
+        { error: 'Missing required fields: userId, gameId and results' },
+        { status: 400 }
+      )
     }
+
+    const collection = await getCollection('wordflower_collection')
+
+    // Find the user's document to locate the session index
+    const userDoc = await collection.findOne({ userId })
+
+    if (!userDoc) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    const sessionIndex = (userDoc.gameSessions ?? []).findIndex(
+      (s: any) => s.gameId === gameId
+    )
+
+    if (sessionIndex >= 0) {
+      // Update using index-based addressing (more reliable than positional $)
+      await collection.updateOne(
+        { userId },
+        {
+          $set: {
+            [`gameSessions.${sessionIndex}.results`]: results,
+            [`gameSessions.${sessionIndex}.updatedAt`]: new Date(),
+            updatedAt: new Date()
+          }
+        }
+      )
+    } else {
+      // Session doesn't exist yet — push a new one with results
+      await collection.updateOne(
+        { userId },
+        {
+          $push: {
+            gameSessions: {
+              gameId,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              events: [],
+              results
+            }
+          } as any,
+          $set: { updatedAt: new Date() }
+        }
+      )
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Game results logging error:', error)
+    return NextResponse.json(
+      { error: 'Failed to log game results' },
+      { status: 500 }
+    )
+  }
 }
 
 export async function GET(request: NextRequest) {

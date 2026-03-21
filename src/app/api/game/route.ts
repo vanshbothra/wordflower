@@ -3,7 +3,7 @@ import data from '@/data/wordData.json'
 
 export async function POST(request: Request) {
   try {
-    const randomId = 7
+    const randomId = 3
 
     const gameData = data.find(g => g.id === randomId)
     // // Cleanup games older than 24 hours
@@ -61,12 +61,12 @@ export async function GET(request: Request) {
   if (!gameId) {
     return NextResponse.json({ error: 'Missing gameId' }, { status: 400 })
   }
-  
+
   const idNum = Number(gameId)
   if (Number.isNaN(idNum)) {
     return NextResponse.json({ error: 'Invalid gameId' }, { status: 400 })
   }
-  
+
   const game = data.find(g => g.id === idNum)
 
   if (!game) {

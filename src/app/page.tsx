@@ -20,6 +20,9 @@ import { AdaptiveHint } from "@/components/adaptive-hint"
 import { computeThreeLetterPrefixCounts, computeThreeLetterSuffixCounts, computeRepeatedLetterWords, computeWordRelationships } from "@/lib/adaptive-hint-utils"
 import type { AdaptiveHintResult } from "@/lib/adaptive-hint-utils"
 import { Card } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { BREAK_THRESHOLD, BREAK_TIME, formatElapsedTime, formatTime } from "@/lib/utils"
+import { BreakModal } from "@/components/break-modal"
 
 export interface GameData {
   gameId: string
@@ -64,13 +67,17 @@ const getUserId = () => {
   if (typeof window === "undefined") return null
 
   const userId = localStorage.getItem('wordflower_user_id')
+  const gameType = localStorage.getItem('wordflower_game_type')
   if (userId) {
     // Ensure cookie is synced with localStorage
     document.cookie = `wordflower_user_id=${userId}; path=/; max-age=31536000`
+    document.cookie = `wordflower_game_type=${gameType}; path=/; max-age=31536000`
   }
   console.log("User ID:", userId)
-  return userId
+  return { userId, gameType }
 }
+
+
 
 export default function WordflowerGame() {
   const router = useRouter()
@@ -92,10 +99,16 @@ export default function WordflowerGame() {
   const [showStartModal, setShowStartModal] = useState(true)
   const [showEndConfirmModal, setShowEndConfirmModal] = useState(false)
   const [timer, setTimer] = useState(30 * 60) // 30 minutes in seconds
+  const [timeSinceWord, setTimeSinceWord] = useState(BREAK_THRESHOLD)
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null)
   const [isTabVisible, setIsTabVisible] = useState(true)
   const [savedGame, setSavedGame] = useState<SavedGameState | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+
+  const [showBreakModal, setShowBreakModal] = useState(false)
+  const [breakTimer, setBreakTimer] = useState(BREAK_TIME)
+  const [spotRoundIndex, setSpotRoundIndex] = useState(0)
+  const [experimentType, setExperimentType] = useState<Array<number> | null>(null)
 
   // Loading states
   const [isSubmittingWord, setIsSubmittingWord] = useState(false)
@@ -109,6 +122,7 @@ export default function WordflowerGame() {
   const wordsFoundRef = useRef(0);
   const foundWordsRef = useRef<string[]>([]);
   const gameStateRef = useRef<'not-started' | 'playing' | 'ended'>('not-started');
+  const breakEndTimeRef = useRef<number | null>(null);
   const currentHintWord = hintWords[currentHintWordIndex] || null
 
   useEffect(() => {
@@ -124,23 +138,34 @@ export default function WordflowerGame() {
     gameStateRef.current = gameState
   }, [gameState])
 
-  // Initialize user ID on mount
+  // Initialize user ID on mount and fetch experiment type
   useEffect(() => {
-    const id = getUserId()
-    setUserId(id)
-
-    // Sync localStorage with cookies for middleware
-    const syncCookie = () => {
-      const localUserId = localStorage.getItem('wordflower_user_id')
-      if (localUserId) {
-        document.cookie = `wordflower_user_id=${localUserId}; path=/; max-age=31536000`
+    const user = getUserId()
+    if (user?.userId) {
+      setUserId(user.userId)
+      if (user.gameType) {
+        try {
+          const parsedType = JSON.parse(user.gameType)
+          setExperimentType(Array.isArray(parsedType) ? parsedType : [parsedType])
+        } catch (e) {
+          console.error("Failed to parse gameType:", e)
+          setExperimentType(null)
+        }
       }
     }
 
-    syncCookie()
-    window.addEventListener('storage', syncCookie)
+    // Sync localStorage with cookies for middleware
+    // const syncCookie = () => {
+    //   const localUserId = localStorage.getItem('wordflower_user_id')
+    //   if (localUserId) {
+    //     document.cookie = `wordflower_user_id=${localUserId}; path=/; max-age=31536000`
+    //   }
+    // }
 
-    return () => window.removeEventListener('storage', syncCookie)
+    // syncCookie()
+    // window.addEventListener('storage', syncCookie)
+
+    // return () => window.removeEventListener('storage', syncCookie)
   }, [])
 
   // Analytics logging function
@@ -262,9 +287,8 @@ export default function WordflowerGame() {
     }
   }, [])
 
-  // Timer functionality with tab visibility support
   useEffect(() => {
-    if (gameState === 'playing') {
+    if (gameState === 'playing' && !(experimentType?.includes(1) && showBreakModal)) {
       const id = setInterval(() => {
         setTimer((prev) => {
           if (prev <= 1) {
@@ -281,7 +305,56 @@ export default function WordflowerGame() {
       clearInterval(intervalId)
       setIntervalId(null)
     }
-  }, [gameState, isTabVisible])
+  }, [gameState, isTabVisible, showBreakModal])
+
+  // Countdown timeSinceWord during gameplay (not during break)
+  useEffect(() => {
+    if (!experimentType?.includes(1) || gameState !== 'playing' || showBreakModal) return
+
+    const id = setInterval(() => {
+      setTimeSinceWord((prev) => {
+        if (prev <= 1) {
+          // 2 minutes since last word found — trigger auto-break
+          // Only trigger if not already showing the modal
+          setShowBreakModal((current) => {
+            if (!current) {
+              const endTime = Date.now() + BREAK_TIME * 1000
+              breakEndTimeRef.current = endTime
+              setBreakTimer(BREAK_TIME)
+
+              logAnalyticsEvent('auto_break_triggered', {
+                currentTime: getElapsedTime(),
+                wordsFound: foundWords.length
+              })
+              return true
+            }
+            return current
+          })
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(id)
+  }, [gameState, showBreakModal])
+
+  // Break timer countdown while break modal is open
+  useEffect(() => {
+    if (!experimentType?.includes(1) || !showBreakModal || !breakEndTimeRef.current) return
+
+    const id = setInterval(() => {
+      const now = Date.now()
+      const remaining = Math.max(0, Math.ceil((breakEndTimeRef.current! - now) / 1000))
+      setBreakTimer(remaining)
+
+      if (remaining <= 0) {
+        clearInterval(id)
+      }
+    }, 500) // Update more frequently for smoothness
+
+    return () => clearInterval(id)
+  }, [showBreakModal])
 
   // Tab visibility handling
   useEffect(() => {
@@ -337,22 +410,6 @@ export default function WordflowerGame() {
       }
     }
   }, [gameState, updateGameMetadata])
-
-  // Format timer display - countdown format
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-
-    if (mins > 0) {
-      if (mins === 1) {
-        return `1 minute remaining`
-      }
-      return `${mins} minutes remaining`
-    } else {
-      // Show seconds when less than 1 minute remaining
-      return `${secs} sec remaining`
-    }
-  }
 
   // Load new game from server
   const loadNewGame = async () => {
@@ -483,6 +540,7 @@ export default function WordflowerGame() {
       setGameState('playing')
       setShowStartModal(false)
       setTimer(30 * 60) // Reset to 30 minutes
+      setTimeSinceWord(BREAK_THRESHOLD) // Reset time since last word
       setFoundWords([])
       setFoundPangrams([])
       setCurrentWord("")
@@ -582,7 +640,7 @@ export default function WordflowerGame() {
           const currentFoundWords = foundWordsRef.current
           const currentElapsedTime = 30 * 60 - timerRef.current
 
-          await fetch('/api/analytics/results', {
+          const res = await fetch('/api/analytics/results', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -597,6 +655,10 @@ export default function WordflowerGame() {
               }
             })
           })
+
+          if (!res.ok) {
+            console.error('Failed to store game results with status:', res.status)
+          }
         } catch (error) {
           console.error('Failed to store game results:', error)
         }
@@ -795,7 +857,7 @@ export default function WordflowerGame() {
       skippedWord: oldWord,
       previousHintLevel: hintLevel,
       newTargetWord: hintWords[nextIndex]?.word || 'unknown',
-      currentTime: timer,
+      currentTime: getElapsedTime(),
       wordsFoundSoFar: foundWords.length
     })
   }
@@ -828,7 +890,7 @@ export default function WordflowerGame() {
     logAnalyticsEvent("hint_previous_word", {
       movedTo: hintWords[prevIndex]?.word || "unknown",
       from: hintWords[currentHintWordIndex]?.word || "unknown",
-      currentTime: timer,
+      currentTime: getElapsedTime(),
       wordsFoundSoFar: foundWords.length,
     });
   };
@@ -911,6 +973,7 @@ export default function WordflowerGame() {
       if (result.isValid) {
         setCurrentWord("")
         setFoundWords((prev) => [...prev, lowerWord])
+        setTimeSinceWord(BREAK_THRESHOLD)
 
         // Track pangrams separately
         if (result.isPangram) {
@@ -966,7 +1029,7 @@ export default function WordflowerGame() {
       logAnalyticsEvent('hint_requested', {
         hintLevel: newHintLevel,
         targetWord: currentHintWord?.word || 'unknown',
-        currentTime: timer,
+        currentTime: getElapsedTime(),
         wordsFoundSoFar: foundWords.length
       })
     }
@@ -988,7 +1051,7 @@ export default function WordflowerGame() {
         handleClear()
       }
       //handle letter click only if key is between A-Z
-      else if (key.length === 1 && key >= 'A' && key <= 'Z') {
+      else if (key.length === 1 && key >= 'A' && key <= 'Z' && !showBreakModal) {
         handleLetterClick(key)
       }
     }
@@ -1007,7 +1070,6 @@ export default function WordflowerGame() {
           <GameControls
             gameState={gameState}
             timer={timer}
-            formatTime={formatTime}
             isTabVisible={isTabVisible}
             isMobile={isMobile}
             onEndGame={handleEndGameRequest}
@@ -1083,7 +1145,6 @@ export default function WordflowerGame() {
         onConfirm={handleEndGameConfirm}
         onCancel={handleEndGameCancel}
         timer={timer}
-        formatTime={formatTime}
       />
 
       <StartGameModal
@@ -1092,11 +1153,25 @@ export default function WordflowerGame() {
         savedGame={savedGame}
         onStartNewGame={startGame}
         onResumeGame={resumeGame}
-        formatTime={formatTime}
         isStartingGame={isStartingGame}
+        experimentType={experimentType}
       />
 
-
+      {experimentType?.includes(1) && (
+        <BreakModal
+          isOpen={showBreakModal}
+          setIsOpen={setShowBreakModal}
+          breakTimer={breakTimer}
+          setTimeSinceWord={setTimeSinceWord}
+          spotRoundIndex={spotRoundIndex}
+          onSpotRoundIndexChange={setSpotRoundIndex}
+          onResume={(answers) => {
+            if (Object.keys(answers).length > 0) {
+              logAnalyticsEvent('break_spot_difference_input', { answers })
+            }
+          }}
+        />
+      )}
       <Toaster />
     </div>
   )
