@@ -1086,6 +1086,7 @@ export default function WordflowerGame() {
         onStartNewGame={startGame}
         onResumeGame={resumeGame}
         isStartingGame={isStartingGame}
+        experimentType={experimentType}
       />
 
       {experimentType?.includes(1) && (

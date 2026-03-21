@@ -26,7 +26,7 @@ interface StartGameModalProps {
   onStartNewGame: () => void
   onResumeGame: (savedGame: SavedGameState) => Promise<void>
   isStartingGame?: boolean
-  experimentType: Array<number>
+  experimentType: Array<number> | null
 }
 
 export function StartGameModal({
@@ -67,7 +67,7 @@ export function StartGameModal({
               <li>Create as many words as you can using the available letters</li>
               <li>Each word must contain the center letter and be at least 4 letters long</li>
               <li>You can repeat letters as needed</li>
-              {experimentType.includes(1) && <li>You will be given a {BREAK_TIME / 60} minute break in the middle of the game</li>}
+              {experimentType?.includes(1) && <li>You will be given a {BREAK_TIME / 60} minute break in the middle of the game</li>}
             </ul>
           </div>
 
