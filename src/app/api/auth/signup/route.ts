@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     const collection = await getCollection('requests')
-    const usersCollection = await getCollection('users')
+    const usersCollection = await getCollection('thesis_users')
 
     // Check if email already exists in requests
     const existingRequest = await collection.findOne({ email: email.toLowerCase() })
@@ -102,8 +102,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Insert into users collection
-    await usersCollection.insertOne({ user: userId });
+    // Round-robin gameType: 1 → 2 → 3 → 1 → 2 → 3 …
+    const lastUser = await usersCollection.findOne({}, { sort: { _id: -1 } });
+    const nextGameType = ((lastUser?.gameType ?? 0) % 3) + 1;
+
+    // Insert into thesis_users collection
+    await usersCollection.insertOne({ user: userId, gameType: nextGameType });
 
     // Send notification email to admin addresses (if configured)
     try {
