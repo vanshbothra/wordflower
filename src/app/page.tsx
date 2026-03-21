@@ -64,12 +64,14 @@ const getUserId = () => {
   if (typeof window === "undefined") return null
 
   const userId = localStorage.getItem('wordflower_user_id')
+  const gameType = localStorage.getItem('wordflower_game_type')
   if (userId) {
     // Ensure cookie is synced with localStorage
     document.cookie = `wordflower_user_id=${userId}; path=/; max-age=31536000`
+    document.cookie = `wordflower_game_type=${gameType}; path=/; max-age=31536000`
   }
   console.log("User ID:", userId)
-  return userId
+  return { userId, gameType }
 }
 
 
@@ -103,6 +105,7 @@ export default function WordflowerGame() {
   const [showBreakModal, setShowBreakModal] = useState(false)
   const [breakTimer, setBreakTimer] = useState(BREAK_TIME)
   const [spotRoundIndex, setSpotRoundIndex] = useState(0)
+  const [experimentType, setExperimentType] = useState<Array<number> | null>(null)
 
   // Loading states
   const [isSubmittingWord, setIsSubmittingWord] = useState(false)
@@ -132,23 +135,34 @@ export default function WordflowerGame() {
     gameStateRef.current = gameState
   }, [gameState])
 
-  // Initialize user ID on mount
+  // Initialize user ID on mount and fetch experiment type
   useEffect(() => {
-    const id = getUserId()
-    setUserId(id)
-
-    // Sync localStorage with cookies for middleware
-    const syncCookie = () => {
-      const localUserId = localStorage.getItem('wordflower_user_id')
-      if (localUserId) {
-        document.cookie = `wordflower_user_id=${localUserId}; path=/; max-age=31536000`
+    const user = getUserId()
+    if (user?.userId) {
+      setUserId(user.userId)
+      if (user.gameType) {
+        try {
+          const parsedType = JSON.parse(user.gameType)
+          setExperimentType(Array.isArray(parsedType) ? parsedType : [parsedType])
+        } catch (e) {
+          console.error("Failed to parse gameType:", e)
+          setExperimentType(null)
+        }
       }
     }
 
-    syncCookie()
-    window.addEventListener('storage', syncCookie)
+    // Sync localStorage with cookies for middleware
+    // const syncCookie = () => {
+    //   const localUserId = localStorage.getItem('wordflower_user_id')
+    //   if (localUserId) {
+    //     document.cookie = `wordflower_user_id=${localUserId}; path=/; max-age=31536000`
+    //   }
+    // }
 
-    return () => window.removeEventListener('storage', syncCookie)
+    // syncCookie()
+    // window.addEventListener('storage', syncCookie)
+
+    // return () => window.removeEventListener('storage', syncCookie)
   }, [])
 
   // Analytics logging function
@@ -270,9 +284,8 @@ export default function WordflowerGame() {
     }
   }, [])
 
-  // Timer functionality with tab visibility support (pauses during break)
   useEffect(() => {
-    if (gameState === 'playing' && !showBreakModal) {
+    if (gameState === 'playing' && !(experimentType?.includes(1) && showBreakModal)) {
       const id = setInterval(() => {
         setTimer((prev) => {
           if (prev <= 1) {
@@ -293,7 +306,7 @@ export default function WordflowerGame() {
 
   // Countdown timeSinceWord during gameplay (not during break)
   useEffect(() => {
-    if (gameState !== 'playing' || showBreakModal) return
+    if (!experimentType?.includes(1) || gameState !== 'playing' || showBreakModal) return
 
     const id = setInterval(() => {
       setTimeSinceWord((prev) => {
@@ -325,7 +338,7 @@ export default function WordflowerGame() {
 
   // Break timer countdown while break modal is open
   useEffect(() => {
-    if (!showBreakModal || !breakEndTimeRef.current) return
+    if (!experimentType?.includes(1) || !showBreakModal || !breakEndTimeRef.current) return
 
     const id = setInterval(() => {
       const now = Date.now()
@@ -1075,19 +1088,21 @@ export default function WordflowerGame() {
         isStartingGame={isStartingGame}
       />
 
-      <BreakModal
-        isOpen={showBreakModal}
-        setIsOpen={setShowBreakModal}
-        breakTimer={breakTimer}
-        setTimeSinceWord={setTimeSinceWord}
-        spotRoundIndex={spotRoundIndex}
-        onSpotRoundIndexChange={setSpotRoundIndex}
-        onResume={(answers) => {
-          if (Object.keys(answers).length > 0) {
-            logAnalyticsEvent('break_spot_difference_input', { answers })
-          }
-        }}
-      />
+      {experimentType?.includes(1) && (
+        <BreakModal
+          isOpen={showBreakModal}
+          setIsOpen={setShowBreakModal}
+          breakTimer={breakTimer}
+          setTimeSinceWord={setTimeSinceWord}
+          spotRoundIndex={spotRoundIndex}
+          onSpotRoundIndexChange={setSpotRoundIndex}
+          onResume={(answers) => {
+            if (Object.keys(answers).length > 0) {
+              logAnalyticsEvent('break_spot_difference_input', { answers })
+            }
+          }}
+        />
+      )}
       <Toaster />
     </div>
   )

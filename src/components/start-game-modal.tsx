@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
-import { formatElapsedTime } from "@/lib/utils"
+import { BREAK_TIME, formatElapsedTime } from "@/lib/utils"
 import { Loader2 } from "lucide-react"
 import { useState } from "react"
 
@@ -26,6 +26,7 @@ interface StartGameModalProps {
   onStartNewGame: () => void
   onResumeGame: (savedGame: SavedGameState) => Promise<void>
   isStartingGame?: boolean
+  experimentType: Array<number>
 }
 
 export function StartGameModal({
@@ -34,7 +35,8 @@ export function StartGameModal({
   savedGame,
   onStartNewGame,
   onResumeGame,
-  isStartingGame = false
+  isStartingGame = false,
+  experimentType
 }: StartGameModalProps) {
   const [isResuming, setIsResuming] = useState(false)
 
@@ -65,7 +67,7 @@ export function StartGameModal({
               <li>Create as many words as you can using the available letters</li>
               <li>Each word must contain the center letter and be at least 4 letters long</li>
               <li>You can repeat letters as needed</li>
-              <li>Each game has atleast one pangram - words that use all the letters!</li>
+              {experimentType.includes(1) && <li>You will be given a {BREAK_TIME / 60} minute break in the middle of the game</li>}
             </ul>
           </div>
 
