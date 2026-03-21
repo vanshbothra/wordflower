@@ -13,21 +13,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const collection = await getCollection('users')
-    
+    const collection = await getCollection('thesis_users')
+
     // Check if user exists in the users collection
     const user = await collection.findOne({ user: userId.trim() })
 
     if (user) {
-      return NextResponse.json({ 
-        isValid: true, 
+      return NextResponse.json({
+        isValid: true,
         message: 'User ID is valid',
-        userId: user.user
+        userId: user.user,
+        gameType: user.gameType
       })
     } else {
-      return NextResponse.json({ 
-        isValid: false, 
-        message: 'User ID not found' 
+      return NextResponse.json({
+        isValid: false,
+        message: 'User ID not found'
       })
     }
   } catch (error) {

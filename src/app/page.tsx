@@ -448,7 +448,7 @@ export default function WordflowerGame() {
 
   // Fetch all words early for adaptive hints when game starts or resumes
   useEffect(() => {
-    if (gameData?.gameId && (gameState === 'playing')) {
+    if (gameData?.gameId && (gameState === 'playing') && experimentType?.includes(2)) {
       const fetchWordsForHints = async () => {
         try {
           const res = await fetch(`/api/game?gameId=${gameData.gameId}`)
@@ -1087,20 +1087,22 @@ export default function WordflowerGame() {
         {gameData && (
           <div className="grid lg:grid-cols-2 gap-8">
             <div>
-              <div className="min-h-[90px] mb-2">
-                <AdaptiveHint
-                  gameState={gameState}
-                  foundWords={foundWords}
-                  allWords={allWords}
-                  hintData={hintWords}
-                  gameData={gameData}
-                  prefixMap={prefixMap}
-                  suffixMap={suffixMap}
-                  repeatedLetterWords={repeatedLetterWords}
-                  wordRelationships={wordRelationships}
-                  onAdaptiveHintShown={handleAdaptiveHintShown}
-                />
-              </div>
+              {experimentType?.includes(2) && (
+                <div className="min-h-[90px] mb-2">
+                  <AdaptiveHint
+                    gameState={gameState}
+                    foundWords={foundWords}
+                    allWords={allWords}
+                    hintData={hintWords}
+                    gameData={gameData}
+                    prefixMap={prefixMap}
+                    suffixMap={suffixMap}
+                    repeatedLetterWords={repeatedLetterWords}
+                    wordRelationships={wordRelationships}
+                    onAdaptiveHintShown={handleAdaptiveHintShown}
+                  />
+                </div>
+              )}
               <WordDisplay currentWord={currentWord} onClear={handleClear} onBackspace={handleBackspace} />
               <Flower
                 centerLetter={gameData.centerLetter}
