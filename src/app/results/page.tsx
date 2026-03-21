@@ -55,6 +55,7 @@ function ResultsPageContent() {
 
   // State management
   const [userId, setUserId] = useState<string | null>(null)
+  const [experimentType, setExperimentType] = useState<Array<number> | null>(null)
   const [gameId, setGameId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -100,6 +101,7 @@ function ResultsPageContent() {
 
         // Get user ID from localStorage
         const userIdFromStorage = localStorage.getItem('wordflower_user_id')
+        const gameTypeFromStorage = localStorage.getItem('wordflower_game_type')
         if (!userIdFromStorage) {
           setError('User ID not found')
           setLoading(false)
@@ -108,6 +110,15 @@ function ResultsPageContent() {
 
         setGameId(gameIdParam)
         setUserId(userIdFromStorage)
+        if (gameTypeFromStorage) {
+          try {
+            const parsedType = JSON.parse(gameTypeFromStorage)
+            setExperimentType(Array.isArray(parsedType) ? parsedType : [parsedType])
+          } catch (e) {
+            console.error("Failed to parse gameType:", e)
+            setExperimentType(null)
+          }
+        }
 
         // Check if feedback already exists for this game
         await checkExistingFeedback(userIdFromStorage, gameIdParam)
@@ -440,34 +451,33 @@ function ResultsPageContent() {
               </div>
 
               {/* Break Helpful Question */}
-              <div className="space-y-3 flex flex-col gap-1">
-                <label className="text-sm font-medium" htmlFor="breakHelpful">
-                  Do you feel like the break helped your gameplay? <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  id="breakHelpful"
-                  value={feedbackForm.breakHelpful || ''}
-                  onChange={(e) => setFeedbackForm(prev => ({ ...prev, breakHelpful: e.target.value }))}
-                  placeholder="Let us know how you felt about the break"
-                  className="w-full p-3 border rounded-lg resize-none h-20 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
-                  maxLength={300}
-                />
-              </div>
-
-              {/* Stuck Strategy Question */}
-              <div className="space-y-3 flex flex-col gap-1">
-                <label className="text-sm font-medium" htmlFor="stuckStrategy">
-                  What do you typically do when you feel stuck? <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  id="stuckStrategy"
-                  value={feedbackForm.stuckStrategy || ''}
-                  onChange={(e) => setFeedbackForm(prev => ({ ...prev, stuckStrategy: e.target.value }))}
-                  placeholder="Tell us what helps you when you hit a wall"
-                  className="w-full p-3 border rounded-lg resize-none h-20 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
-                  maxLength={300}
-                />
-              </div>
+              {experimentType?.includes(1) &&
+                <>
+                  <div className="space-y-3 flex flex-col gap-1">
+                    <label className="text-sm font-medium" htmlFor="breakHelpful">
+                      Do you feel like the break helped your gameplay? <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      id="breakHelpful"
+                      value={feedbackForm.breakHelpful || ''}
+                      onChange={(e) => setFeedbackForm(prev => ({ ...prev, breakHelpful: e.target.value }))}
+                      placeholder="Let us know how you felt about the break"
+                      className="w-full p-3 border rounded-lg resize-none h-20 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                      maxLength={300} />
+                  </div><div className="space-y-3 flex flex-col gap-1">
+                    <label className="text-sm font-medium" htmlFor="stuckStrategy">
+                      What do you typically do when you feel stuck? <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      id="stuckStrategy"
+                      value={feedbackForm.stuckStrategy || ''}
+                      onChange={(e) => setFeedbackForm(prev => ({ ...prev, stuckStrategy: e.target.value }))}
+                      placeholder="Tell us what helps you when you hit a wall"
+                      className="w-full p-3 border rounded-lg resize-none h-20 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                      maxLength={300} />
+                  </div>
+                </>
+              }
 
               {/* Improvement Suggestion */}
               <div className="space-y-3 flex flex-col gap-1">
