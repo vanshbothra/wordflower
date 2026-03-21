@@ -2856,5 +2856,139 @@
         2
       ]
     }
+  ],
+  "31": [
+    {
+      "word": "LIAR",
+      "relatedWord": "a person who tells lies",
+      "synonym": "fabricator",
+      "phrase": "she knew he was a ______ when he started claiming that he was an astronaut",
+      "fillInBlank": "L__R",
+      "blankLetters": [
+        1,
+        2
+      ]
+    },
+    {
+      "word": "LAIR",
+      "relatedWord": "a place where a person goes to hide or to avoid others",
+      "synonym": "concealment",
+      "phrase": "while he was on the road, he used the back compartment of his lorry as his ______",
+      "fillInBlank": "L__R",
+      "blankLetters": [
+        1,
+        2
+      ]
+    },
+    {
+      "word": "PAIR",
+      "relatedWord": "two things of the same or similar kind that match or are considered together",
+      "synonym": "brace",
+      "phrase": "a ______ of blue socks",
+      "fillInBlank": "P__R",
+      "blankLetters": [
+        1,
+        2
+      ]
+    },
+    {
+      "word": "CIRCA",
+      "relatedWord": "not far from (something) in time",
+      "synonym": "alongside",
+      "phrase": "He was born ______ 1600.",
+      "fillInBlank": "C___A",
+      "blankLetters": [
+        1,
+        3
+      ]
+    },
+    {
+      "word": "RAIN",
+      "relatedWord": "a steady falling of water from the sky in significant quantity",
+      "synonym": "cloudburst",
+      "phrase": "the Norman invaders fled when the castle's defenders threw a ______ of stones down upon them",
+      "fillInBlank": "R__N",
+      "blankLetters": [
+        1,
+        2
+      ]
+    },
+    {
+      "word": "RACIAL",
+      "relatedWord": "of, relating to, or reflecting the traits exhibited by a group of people with a common ancestry and culture",
+      "synonym": "ethnic",
+      "phrase": "a survey that included an optional question regarding ______ identity, age, and other personal information",
+      "fillInBlank": "R____L",
+      "blankLetters": [
+        1,
+        4
+      ]
+    },
+    {
+      "word": "ARIA",
+      "relatedWord": "a melody in an opera sung by one person",
+      "synonym": "art song",
+      "phrase": "the soprano's magnificent ______",
+      "fillInBlank": "A__A",
+      "blankLetters": [
+        1,
+        2
+      ]
+    },
+    {
+      "word": "RAIL",
+      "relatedWord": "a protective barrier consisting of a horizontal bar and its supports",
+      "synonym": "balustrade",
+      "phrase": "an abandoned stretch of ______ that was overgrown with brush",
+      "fillInBlank": "R__L",
+      "blankLetters": [
+        1,
+        2
+      ]
+    },
+    {
+      "word": "PILLAR",
+      "relatedWord": "an upright shaft that supports an overhead structure",
+      "synonym": "column",
+      "phrase": "my father has been my ______ throughout this crisis",
+      "fillInBlank": "P____R",
+      "blankLetters": [
+        1,
+        4
+      ]
+    },
+    {
+      "word": "CARNAL",
+      "relatedWord": "having to do with life on earth especially as opposed to that in heaven",
+      "synonym": "earthborn",
+      "phrase": "______ attractions of that gambling mecca in the desert",
+      "fillInBlank": "C____L",
+      "blankLetters": [
+        1,
+        4
+      ]
+    },
+    {
+      "word": "CAIRN",
+      "relatedWord": "a small quantity of stones heaped together that usually marks a place",
+      "synonym": "barrow",
+      "phrase": "A ______ of loose stones marked the site.",
+      "fillInBlank": "C___N",
+      "blankLetters": [
+        1,
+        3
+      ]
+    },
+    {
+      "word": "CARP",
+      "relatedWord": "an expression of dissatisfaction, pain, or resentment",
+      "synonym": "beef",
+      "phrase": "the usual ______ about that restaurant is that the service is slow",
+      "fillInBlank": "C__P",
+      "blankLetters": [
+        1,
+        2
+      ]
+    }
   ]
 }

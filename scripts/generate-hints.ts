@@ -109,7 +109,7 @@ async function fetchWordHint(word: string): Promise<WordHints | null> {
     }
 }
 
-async function generateHintsForGames(maxGames: number = 10) {
+async function generateHintsForGames(maxGames: number = 10, specificGameId?: number) {
     if (!API_THESAURUS_KEY) {
         console.error('❌ NEXT_PUBLIC_MWT_API_KEY not found in environment variables!')
         console.error('   Make sure you have a .env file with the API key.')
@@ -133,8 +133,20 @@ async function generateHintsForGames(maxGames: number = 10) {
         }
     }
 
-    const gamesToProcess = wordData.slice(0, maxGames)
-    console.log(`\n🎮 Processing ${gamesToProcess.length} games...\n`)
+    let gamesToProcess = wordData.slice(0, maxGames)
+    
+    if (specificGameId !== undefined) {
+        const found = wordData.find(g => g.id === specificGameId)
+        if (found) {
+            gamesToProcess = [found]
+            console.log(`\n🎮 Specifically processing game ID ${specificGameId}...\n`)
+        } else {
+            console.error(`\n❌ Game ID ${specificGameId} not found in wordData.json\n`)
+            process.exit(1)
+        }
+    } else {
+        console.log(`\n🎮 Processing first ${gamesToProcess.length} games...\n`)
+    }
 
     for (const game of gamesToProcess) {
         const gameId = String(game.id)
@@ -177,4 +189,8 @@ async function generateHintsForGames(maxGames: number = 10) {
 }
 
 // Run the script
-generateHintsForGames(10)
+const args = process.argv.slice(2);
+const gameIdArg = args.find(arg => arg.startsWith('--gameId='));
+const specificGameId = gameIdArg ? parseInt(gameIdArg.split('=')[1]) : undefined;
+
+generateHintsForGames(100, specificGameId)

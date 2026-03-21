@@ -26,8 +26,10 @@ export default function SignInPage() {
   useEffect(() => {
     const syncCookie = () => {
       const localUserId = localStorage.getItem('wordflower_user_id')
+      const localGameType = localStorage.getItem('wordflower_game_type')
       if (localUserId) {
         document.cookie = `wordflower_user_id=${localUserId}; path=/; max-age=31536000` // 1 year
+        document.cookie = `wordflower_game_type=${localGameType}; path=/; max-age=31536000`
       }
     }
 
@@ -61,7 +63,7 @@ export default function SignInPage() {
       if (result.isValid) {
         // Store user ID in localStorage
         localStorage.setItem('wordflower_user_id', userId.trim())
-
+        localStorage.setItem('wordflower_game_type', JSON.stringify(result.gameType))
         // Set cookie for middleware
         document.cookie = `wordflower_user_id=${userId.trim()}; path=/; max-age=31536000`
 

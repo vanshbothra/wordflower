@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Star } from "lucide-react"
+import { Star, Brain, BookOpen, Trash2, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import { Toaster } from "@/components/ui/sonner"
 
@@ -15,6 +15,13 @@ interface GameData {
   outerLetters: string[]
   wordCount: number
   pangramCount: number
+}
+
+interface WordHint {
+  word: string
+  relatedWord: string
+  synonym?: string
+  phrase?: string
 }
 
 interface GameResults {
@@ -67,6 +74,12 @@ function ResultsPageContent() {
   // Results state
   const [gameResults, setGameResults] = useState<GameResults | null>(null)
   const [resultsError, setResultsError] = useState<string | null>(null)
+
+  // Word categorization state
+  const [categorizations, setCategorizations] = useState<Record<string, 'know' | 'learn' | 'ignore'>>({})
+  const [wordMeanings, setWordMeanings] = useState<Record<string, string>>({})
+  const [isSubmittingCategorizations, setIsSubmittingCategorizations] = useState(false)
+  const [categorizationsSubmitted, setCategorizationsSubmitted] = useState(false)
 
   // Function to return to main page
   const handleReturnToGame = () => {
@@ -152,6 +165,10 @@ function ResultsPageContent() {
         if (response.ok) {
           const results = await response.json()
           setGameResults(results)
+          // Fetch meanings for all words
+          if (gameId) {
+            fetchAndSetWordMeanings(gameId)
+          }
           setResultsError(null)
           return
         } else if (response.status === 404 && attempt < retries - 1) {
@@ -169,6 +186,28 @@ function ResultsPageContent() {
           setResultsError('Results could not be loaded. Your game data has been saved.')
         }
       }
+    }
+  }
+
+  // Fetch word meanings from hint API
+  const fetchAndSetWordMeanings = async (gameId: string) => {
+    try {
+      const response = await fetch('/api/hint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameId })
+      })
+
+      if (response.ok) {
+        const hints: WordHint[] = await response.json()
+        const meanings: Record<string, string> = {}
+        hints.forEach(hint => {
+          meanings[hint.word.toLowerCase()] = hint.relatedWord
+        })
+        setWordMeanings(meanings)
+      }
+    } catch (error) {
+      console.error('Error fetching hints for meanings:', error)
     }
   }
 
@@ -235,6 +274,62 @@ function ResultsPageContent() {
     }
 
     setIsSubmittingFeedback(false)
+  }
+
+  // Handle word categorization submission
+  const handleCategorizationSubmit = async () => {
+    const missedWords = getMissedWords()
+    if (Object.keys(categorizations).length < missedWords.length) {
+      toast.error("Please categorize all missed words")
+      return
+    }
+
+    setIsSubmittingCategorizations(true)
+
+    try {
+      const response = await fetch('/api/analytics/word-categorization', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          gameId,
+          categorizations
+        })
+      })
+
+      if (response.ok) {
+        toast.success("Categorizations submitted! Thank you.")
+        setCategorizationsSubmitted(true)
+      } else {
+        toast.error("Failed to submit categorizations")
+      }
+    } catch (error) {
+      console.error('Error submitting categorizations:', error)
+      toast.error("An error occurred during submission")
+    } finally {
+      setIsSubmittingCategorizations(false)
+    }
+  }
+
+  // Get words the user missed (ensuring uniqueness)
+  const getMissedWords = () => {
+    if (!gameResults || !gameResults.allWords) return []
+    const uniqueMissed = gameResults.allWords.filter(word =>
+      !gameResults.foundWords.some(found => found.trim().toLowerCase() === word.trim().toLowerCase())
+    )
+
+    // De-duplicate the missed words list
+    return Array.from(new Set(uniqueMissed.map(w => w.trim().toLowerCase())))
+      .map(lowWord => uniqueMissed.find(w => w.trim().toLowerCase() === lowWord) || '')
+      .filter(w => w !== '')
+  }
+
+  // Handle categorization change
+  const handleCategorize = (word: string, category: 'know' | 'learn' | 'ignore') => {
+    setCategorizations(prev => ({
+      ...prev,
+      [word]: category
+    }))
   }
 
   // Check if feedback form is valid
@@ -470,11 +565,89 @@ function ResultsPageContent() {
                   </div>
                 )}
 
-                {/* <div className="pt-4 text-center">
-                  <Button onClick={handleReturnToGame} size="lg" className="w-full">
-                    Play Again
-                  </Button>
-                </div> */}
+                {feedbackSubmitted && gameResults && getMissedWords().length > 0 && !categorizationsSubmitted && (
+                  <div className="mt-8 border-t pt-8">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+                      <div>
+                        <h4 className="text-xl font-semibold mb-2">🌻 Categorize Missed Words</h4>
+                        <p className="text-muted-foreground text-sm">
+                          How do you feel about the words you missed? Categorize each to help us understand your vocabulary.
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-center md:items-end gap-2 shrink-0">
+                        <Button
+                          onClick={handleCategorizationSubmit}
+                          disabled={Object.keys(categorizations).length < getMissedWords().length || isSubmittingCategorizations}
+                          className="px-8 py-4 font-bold"
+                        >
+                          {isSubmittingCategorizations ? "Submitting..." : "Submit & Finish"}
+                        </Button>
+                        <p className="text-xs text-muted-foreground">
+                          {Object.keys(categorizations).length} of {getMissedWords().length} words categorized
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[600px] overflow-y-auto pr-2 border rounded-xl p-4 bg-gray-50/50 dark:bg-gray-800/50">
+                      {getMissedWords().map((word, index) => (
+                        <div key={index} className="flex flex-col p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow h-full">
+                          <div className="mb-3">
+                            <span className="font-bold text-lg block">{word}</span>
+                            {wordMeanings[word.toLowerCase()] && (
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2 italic">
+                                {wordMeanings[word.toLowerCase()]}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex flex-col gap-2 mt-auto">
+                            <button
+                              onClick={() => handleCategorize(word, 'know')}
+                              className={`flex items-center justify-center gap-2 px-2 py-2 rounded-lg text-[10px] font-bold transition-all ${categorizations[word] === 'know'
+                                ? 'bg-blue-600 text-white shadow-md'
+                                : 'bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 border'
+                                }`}
+                            >
+                              <Brain size={12} />
+                              <span>KNEW IT</span>
+                            </button>
+                            <button
+                              onClick={() => handleCategorize(word, 'learn')}
+                              className={`flex items-center justify-center gap-2 px-2 py-2 rounded-lg text-[10px] font-bold transition-all ${categorizations[word] === 'learn'
+                                ? 'bg-green-600 text-white shadow-md'
+                                : 'bg-white dark:bg-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20 border'
+                                }`}
+                            >
+                              <BookOpen size={12} />
+                              <span>GOOD TO LEARN</span>
+                            </button>
+                            <button
+                              onClick={() => handleCategorize(word, 'ignore')}
+                              className={`flex items-center justify-center gap-2 px-2 py-2 rounded-lg text-[10px] font-bold transition-all ${categorizations[word] === 'ignore'
+                                ? 'bg-gray-500 text-white shadow-md'
+                                : 'bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-900/20 border'
+                                }`}
+                            >
+                              <Trash2 size={12} />
+                              <span>DON'T CARE</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {categorizationsSubmitted && (
+                  <div className="mt-8 border-t pt-8 text-center animate-in fade-in zoom-in duration-500">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 mb-4 border-2 border-green-200 dark:border-green-800">
+                      <CheckCircle2 size={32} />
+                    </div>
+                    <p className="text-muted-foreground mb-8">
+                      Thank you for your valuable input. Future puzzles and hints will be better thanks to you!
+                    </p>
+                  </div>
+                )}
               </div>
             </Card>
           </div>

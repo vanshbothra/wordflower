@@ -66,8 +66,9 @@ export function StartGameModal({
               <li>Play this game on your own and do not use any external resources</li>
               <li>Create as many words as you can using the available letters</li>
               <li>Each word must contain the center letter and be at least 4 letters long</li>
-              <li>You can repeat letters as needed</li>
+              <li>You can <b>repeat letters</b> as needed</li>
               {experimentType?.includes(1) && <li>You will be given a {BREAK_TIME / 60} minute break in the middle of the game</li>}
+              {experimentType?.includes(2) && <li>You will be given hints to help you find words</li>}
             </ul>
           </div>
 

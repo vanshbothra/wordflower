@@ -8,7 +8,7 @@ export function GameRules() {
         <Target className="h-5 w-5 text-primary" />
         Game Rules
       </h3>
-      
+
       <div className="space-y-4 text-sm">
         <div className="space-y-2">
           <h4 className="font-medium">How to Play:</h4>
@@ -16,8 +16,8 @@ export function GameRules() {
             <li>Play this game <strong>on your own</strong> and do not use any external resources</li>
             <li>Create words using the available letters</li>
             <li>Each word must contain the center letter and be at least 4 letters long</li>
-            <li>You can repeat letters as needed</li>
-            <li>Each game has atleast one <strong>pangram</strong> - words that use all the letters!</li>
+            <li>You can <b>repeat letters</b> as needed</li>
+            {/* <li>Each game has atleast one <strong>pangram</strong> - words that use all the letters!</li> */}
           </ul>
         </div>
 
@@ -31,7 +31,7 @@ export function GameRules() {
             <div className="flex items-center gap-2 text-muted-foreground">
               <Shuffle className="h-4 w-4 text-green-500" />
               <span>Use the shuffle button to rearrange letters</span>
-            </div>            
+            </div>
           </div>
         </div>
 
