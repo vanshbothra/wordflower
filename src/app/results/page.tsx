@@ -648,14 +648,30 @@ function ResultsPageContent() {
                   </div>
                 )}
 
-                {categorizationsSubmitted && (
-                  <div className="mt-8 border-t pt-8 text-center animate-in fade-in zoom-in duration-500">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 mb-4 border-2 border-green-200 dark:border-green-800">
-                      <CheckCircle2 size={32} />
+                {(categorizationsSubmitted || (feedbackSubmitted && getMissedWords().length === 0)) && (
+                  <div className="mt-8 border-t pt-8 animate-in fade-in zoom-in duration-500">
+                    <div className="text-center mb-6">
+                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 mb-4 border-2 border-green-200 dark:border-green-800">
+                        <CheckCircle2 size={32} />
+                      </div>
+                      <p className="text-muted-foreground">
+                        Thank you for your valuable input!
+                      </p>
                     </div>
-                    <p className="text-muted-foreground mb-8">
-                      Thank you for your valuable input. Future puzzles and hints will be better thanks to you!
-                    </p>
+
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-sm text-muted-foreground space-y-3">
+                      <h4 className="font-semibold text-foreground text-base">Study Debrief</h4>
+                      <p>
+                        Data collected during this session includes which condition you were assigned,
+                        correct and incorrect words found, letter positions, hints shown (if any), and
+                        duration of break. This data will be used in a statistical manner to understand
+                        progress made during the game, and whether breaks or hints tend to help
+                        participants perform better.
+                      </p>
+                      <p>
+                        The data studied will be in aggregate form and will not be directly linked to you.
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>

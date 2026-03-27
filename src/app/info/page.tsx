@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function ExperimentInfoPage() {
     const router = useRouter();
@@ -42,19 +43,26 @@ export default function ExperimentInfoPage() {
                     </p>
                     <br />
                     <p>
-                        You will now play a round of the Wordflower game. <strong>Please play this game on your own and do not use any external resources.</strong> Please answer brief surveys before and after the session. The total duration for playing the game is{" "}
-                        <strong>30 minutes</strong>. You will be given a break in between the game, in which you will have to perform a small task. This break will last for 5 minutes.
+                        This study involves minimal risk and poses no harm of any kind to participants. You will not be
+                        exposed to any distressing, deceptive, or physically demanding tasks. The activity consists solely
+                        of the word game and the condition you are assigned, and you are free to stop at any point without any
+                        consequence.
+                    </p>
+                    <br />
+                    <p>
+                        You will now play a round of the Wordflower game. <strong>Please play this game on your own and do not use any external resources.</strong>
+                        Please answer brief surveys before and after the session. The total duration for playing the game is{" "}
+                        <strong>30 minutes</strong>. You will be randomly assigned to one of two game versions — one may offer hints when you appear to be
+                        stuck, while the other may briefly redirect you to a short visual task. Both versions are designed to be non-disruptive and are a core part of the study.
                     </p>
                     <br />
                     <p>
                         Data collected will remain private and confidential, and only the research team will have
                         access to your information. No personally identifying information will appear in any
-                        publication or presentation.
-
-                        Data collected includes: </p>
+                        publication or presentation. For more details on how your data is collected, stored,
+                        and protected, please review our <a href="/data-safety-policy" className="underline text-primary">Data Privacy Policy</a>. Data collected includes: </p>
                     <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                        <li>Personal information (Name)</li>
-                        <li>Contact information (Email)</li>
+                        <li>Signup information (Email)</li>
                         <li>Demographics (Age and Gender)</li>
                         <li>Background information (Education and Occupation)</li>
                         <li>Linguistic background (Native Language and English Proficiency)</li>
@@ -75,14 +83,20 @@ export default function ExperimentInfoPage() {
                     </p>
                 </div>
 
-                <div className="pt-6 flex justify-center">
+                <div className="pt-6 flex justify-center gap-4">
+                    <Button
+                        variant="outline"
+                        onClick={() => router.push("/")}
+                        className="w-full sm:w-auto"
+                    >
+                        I Disagree
+                    </Button>
                     <Button
                         onClick={() => {
                             // Set consent cookie instead of localStorage
                             document.cookie = "wordflower_consent=true; path=/; max-age=31536000"
                             router.push("/signup")
-                        }
-                        }
+                        }}
                         className="w-full sm:w-auto"
                     >
                         I Agree and Continue
