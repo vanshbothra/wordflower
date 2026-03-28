@@ -88,7 +88,7 @@ export default function DataSafetyPolicyPage() {
                         <a href="mailto:vansh.bothra_ug25@ashoka.edu.in" className="underline text-primary">
                             vansh.bothra_ug25@ashoka.edu.in
                         </a>.
-                        Your personally identifying information and associated gameplay logs will be permanently
+                        Your signup information and associated gameplay logs will be permanently
                         removed from the database.
                     </p>
                 </section>
