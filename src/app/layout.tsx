@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Wordflower Study",
-  description: "Created to study how people go about solving word puzzles.",
+  title: "TRACE Research Project",
+  description: "Tracing Retrieval And Cognitive Exploration — a research study on word puzzles and cognition.",
 };
 
 export default function RootLayout({

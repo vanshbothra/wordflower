@@ -56,7 +56,7 @@ export function StartGameModal({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Thank you for participating in our study! 🌻</DialogTitle>
+          <DialogTitle>Thank you for participating in the TRACE Research Project! 🌻</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">

@@ -11,8 +11,6 @@ import Image from "next/image"
 
 
 interface SignUpForm {
-  firstName: string
-  lastName: string
   email: string
   age: string
   gender: string
@@ -78,8 +76,6 @@ const WORDFLOWER_FAMILIARITY: OptionsProps = {
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState<SignUpForm>({
-    firstName: "",
-    lastName: "",
     email: "",
     age: "",
     gender: "",
@@ -114,7 +110,7 @@ export default function SignUpPage() {
     e.preventDefault()
 
     // Basic validation
-    const requiredFields = ['firstName', 'lastName', 'email', 'age', 'gender', 'education', 'nativeLanguage', 'englishProficiency', 'wordflowerFamiliarity', 'occupation']
+    const requiredFields = ['email', 'age', 'gender', 'education', 'nativeLanguage', 'englishProficiency', 'wordflowerFamiliarity', 'occupation']
     const missingFields = requiredFields.filter(field => !formData[field as keyof SignUpForm].trim())
 
     if (missingFields.length > 0) {
@@ -187,43 +183,6 @@ export default function SignUpPage() {
 
         <div className="bg-card p-6 rounded-lg border shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Personal Information */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium mb-2">
-                    First Name *
-                  </label>
-                  <input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent h-9"
-                    disabled={isLoading}
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium mb-2">
-                    Last Name *
-                  </label>
-                  <input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent h-9"
-                    disabled={isLoading}
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* Contact Information */}
             <div>
               <h3 className="text-lg font-semibold mb-4">Contact Information</h3>

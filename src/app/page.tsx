@@ -1125,7 +1125,7 @@ export default function WordflowerGame() {
                 totalWords={gameData.wordCount}
                 pangrams={foundPangrams}
               />
-              <GameRules />
+              <GameRules experimentType={experimentType} />
               {/* <Card className="p-6 mb-6">
                 <HintSystem
                   currentHintWord={currentHintWord}

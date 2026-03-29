@@ -1,18 +1,23 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { Toaster } from "@/components/ui/sonner"
 import Image from "next/image"
 
-export default function SignInPage() {
+function SignInForm() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [userId, setUserId] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [showRequestModal, setShowRequestModal] = useState(false)
-  const router = useRouter()
+
+  // Pre-fill code from query param
+  useEffect(() => {
+    const code = searchParams.get("code")
+    if (code) setUserId(code)
+  }, [searchParams])
 
   // Check if user is already signed in
   useEffect(() => {
@@ -22,21 +27,18 @@ export default function SignInPage() {
     }
   }, [router])
 
-  // Set cookie when localStorage changes (for middleware)
+  // Sync cookie with localStorage
   useEffect(() => {
     const syncCookie = () => {
       const localUserId = localStorage.getItem('wordflower_user_id')
       const localGameType = localStorage.getItem('wordflower_game_type')
       if (localUserId) {
-        document.cookie = `wordflower_user_id=${localUserId}; path=/; max-age=31536000` // 1 year
+        document.cookie = `wordflower_user_id=${localUserId}; path=/; max-age=31536000`
         document.cookie = `wordflower_game_type=${localGameType}; path=/; max-age=31536000`
       }
     }
-
-    // Sync on mount and when localStorage changes
     syncCookie()
     window.addEventListener('storage', syncCookie)
-
     return () => window.removeEventListener('storage', syncCookie)
   }, [])
 
@@ -51,7 +53,6 @@ export default function SignInPage() {
     setIsLoading(true)
 
     try {
-      // Validate user ID against the users collection
       const response = await fetch('/api/auth/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -61,15 +62,11 @@ export default function SignInPage() {
       const result = await response.json()
 
       if (result.isValid) {
-        // Store user ID in localStorage
         localStorage.setItem('wordflower_user_id', userId.trim())
         localStorage.setItem('wordflower_game_type', JSON.stringify(result.gameType))
-        // Set cookie for middleware
         document.cookie = `wordflower_user_id=${userId.trim()}; path=/; max-age=31536000`
 
         toast.success("Successfully signed in!")
-
-        // Redirect to home page
         router.push('/')
       } else {
         toast.error("Invalid user ID. Please check your credentials or request a new user ID.")
@@ -80,11 +77,6 @@ export default function SignInPage() {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const handleRequestAccess = () => {
-    setShowRequestModal(false)
-    router.push('/info')
   }
 
   return (
@@ -107,14 +99,14 @@ export default function SignInPage() {
           <form onSubmit={handleSignIn} className="space-y-4">
             <div>
               <label htmlFor="userId" className="block text-sm font-medium mb-2">
-                User ID
+                Participant Code
               </label>
               <input
                 id="userId"
                 type="text"
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
-                placeholder="Enter your user ID"
+                placeholder="Enter your participant code"
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 disabled={isLoading}
                 required
@@ -126,20 +118,20 @@ export default function SignInPage() {
               className="w-full"
               disabled={isLoading || !userId.trim()}
             >
-              {isLoading ? "Signing in..." : "Sign In"}
+              {isLoading ? "Signing in..." : "Start the Study"}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground mb-3">
-              Don't have a user ID?
+              Don't have a participant code?
             </p>
             <Button
               variant="outline"
-              onClick={handleRequestAccess}
+              onClick={() => router.push('/info')}
               className="w-full"
             >
-              Sign Up for the Experiment
+              Register to Participate
             </Button>
           </div>
         </div>
@@ -147,5 +139,17 @@ export default function SignInPage() {
 
       <Toaster />
     </div>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    }>
+      <SignInForm />
+    </Suspense>
   )
 }

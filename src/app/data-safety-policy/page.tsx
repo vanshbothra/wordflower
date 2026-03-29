@@ -22,7 +22,7 @@ export default function DataSafetyPolicyPage() {
             <div className="border rounded-lg p-6 bg-card shadow-sm space-y-6 text-foreground">
                 <p>
                     We take your privacy seriously. This page explains how we handle the data collected
-                    during the Wordflower study.
+                    during the TRACE Research Project.
                 </p>
 
                 <section>

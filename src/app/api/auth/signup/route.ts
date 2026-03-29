@@ -3,8 +3,6 @@ import nodemailer from 'nodemailer';
 import { getCollection } from '@/lib/mongodb'
 
 interface SignUpRequest {
-  firstName: string
-  lastName: string
   email: string
   age: number
   gender: string
@@ -20,8 +18,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const {
-      firstName,
-      lastName,
       email,
       age,
       gender,
@@ -34,7 +30,7 @@ export async function POST(request: NextRequest) {
     } = body
 
     // Validate required fields
-    if (!firstName || !lastName || !email || !age || !gender || !education || !nativeLanguage || !englishProficiency || !wordflowerFamiliarity) {
+    if (!email || !age || !gender || !education || !nativeLanguage || !englishProficiency || !wordflowerFamiliarity) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -72,8 +68,6 @@ export async function POST(request: NextRequest) {
 
     // Create the signup request
     const signupRequest: SignUpRequest = {
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
       email: email.toLowerCase().trim(),
       age,
       gender,
@@ -128,40 +122,48 @@ export async function POST(request: NextRequest) {
           }
         })
 
-        const subject = `Wordflower Study Registration - Thank You, ${signupRequest.firstName}!`
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || `${request.nextUrl.protocol}//${request.nextUrl.host}`
+        const startLink = `${appUrl}/signin?code=${userId}`
+
+        const subject = `TRACE Research Project - You're Registered!`
         const htmlBody = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6;">
             <div style="background-color: #f8f9fa; padding: 25px; border-radius: 10px; border: 1px solid #e9ecef;">
               <h2 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">Thank you for participating!</h2>
-              <p style="font-size: 16px;">Hi ${signupRequest.firstName},</p>
-              <p style="font-size: 15px;">Thank you so much for registering for the <strong>Wordflower Study</strong>. We deeply appreciate your time and participation.</p>
-              
+              <p style="font-size: 15px;">Thank you so much for registering for the <strong>TRACE Research Project</strong>. We deeply appreciate your time and participation.</p>
+
+              <div style="background-color: #e8f4f8; padding: 20px; border-radius: 8px; text-align: center; margin: 25px 0; border: 1px solid #bce8f1;">
+                <p style="margin: 0 0 8px 0; font-size: 16px; color: #31708f;"><strong>Your Participant Code</strong></p>
+                <div style="background-color: #ffffff; display: inline-block; padding: 10px 30px; border-radius: 6px; margin: 10px 0; border: 2px dashed #3498db;">
+                  <span style="font-size: 30px; font-weight: bold; color: #2c3e50; letter-spacing: 4px; font-family: monospace;">${userId}</span>
+                </div>
+                <p style="font-size: 13px; color: #666; margin: 8px 0 0 0;">Keep this code safe — you will need it to sign in.</p>
+              </div>
+
+              <div style="text-align: center; margin: 25px 0;">
+                <a href="${startLink}" style="display: inline-block; background-color: #3498db; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: bold;">
+                  Start the Study →
+                </a>
+                <p style="font-size: 12px; color: #999; margin-top: 10px;">Or copy this link: <a href="${startLink}" style="color: #3498db;">${startLink}</a></p>
+              </div>
+
               <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #3498db; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                <h3 style="margin-top: 0; color: #2c3e50; font-size: 18px;">Your Registration Details</h3>
-                <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 15px;">
-                  <li style="padding: 6px 0; border-bottom: 1px solid #f0f0f0;"><strong>Name:</strong> ${signupRequest.firstName} ${signupRequest.lastName}</li>
-                  <li style="padding: 6px 0; border-bottom: 1px solid #f0f0f0;"><strong>Email:</strong> ${signupRequest.email}</li>
-                  <li style="padding: 6px 0; border-bottom: 1px solid #f0f0f0;"><strong>Age:</strong> ${signupRequest.age}</li>
-                  <li style="padding: 6px 0; border-bottom: 1px solid #f0f0f0;"><strong>Gender:</strong> ${signupRequest.gender}</li>
-                  <li style="padding: 6px 0; border-bottom: 1px solid #f0f0f0;"><strong>Education:</strong> ${signupRequest.education}</li>
-                  <li style="padding: 6px 0; border-bottom: 1px solid #f0f0f0;"><strong>Occupation:</strong> ${signupRequest.occupation}</li>
-                  <li style="padding: 6px 0; border-bottom: 1px solid #f0f0f0;"><strong>Native language:</strong> ${signupRequest.nativeLanguage}</li>
-                  <li style="padding: 6px 0; border-bottom: 1px solid #f0f0f0;"><strong>English proficiency:</strong> ${signupRequest.englishProficiency}</li>
-                  <li style="padding: 6px 0;"><strong>Submitted At:</strong> ${new Date(signupRequest.submittedAt).toLocaleString()}</li>
+                <h3 style="margin-top: 0; color: #2c3e50; font-size: 16px;">Your Registration Details</h3>
+                <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 14px;">
+                  <li style="padding: 5px 0; border-bottom: 1px solid #f0f0f0;"><strong>Email:</strong> ${signupRequest.email}</li>
+                  <li style="padding: 5px 0; border-bottom: 1px solid #f0f0f0;"><strong>Age:</strong> ${signupRequest.age}</li>
+                  <li style="padding: 5px 0; border-bottom: 1px solid #f0f0f0;"><strong>Gender:</strong> ${signupRequest.gender}</li>
+                  <li style="padding: 5px 0; border-bottom: 1px solid #f0f0f0;"><strong>Education:</strong> ${signupRequest.education}</li>
+                  <li style="padding: 5px 0; border-bottom: 1px solid #f0f0f0;"><strong>Occupation:</strong> ${signupRequest.occupation}</li>
+                  <li style="padding: 5px 0; border-bottom: 1px solid #f0f0f0;"><strong>Native language:</strong> ${signupRequest.nativeLanguage}</li>
+                  <li style="padding: 5px 0; border-bottom: 1px solid #f0f0f0;"><strong>English proficiency:</strong> ${signupRequest.englishProficiency}</li>
+                  <li style="padding: 5px 0;"><strong>Submitted at:</strong> ${new Date(signupRequest.submittedAt).toLocaleString()}</li>
                 </ul>
               </div>
 
-              <div style="background-color: #e8f4f8; padding: 20px; border-radius: 8px; text-align: center; margin: 25px 0; border: 1px solid #bce8f1;">
-                <p style="margin: 0; font-size: 16px; color: #31708f;"><strong>Your Auto-Generated User ID:</strong></p>
-                <div style="background-color: #ffffff; display: inline-block; padding: 10px 25px; border-radius: 6px; margin: 15px 0; border: 2px dashed #3498db;">
-                  <span style="font-size: 26px; font-weight: bold; color: #2c3e50; letter-spacing: 3px; font-family: monospace;">${userId}</span>
-                </div>
-                <p style="font-size: 14px; color: #666; margin: 0;">Please keep this ID for your records and future reference.</p>
-              </div>
-
-              <p style="color: #777; font-size: 14px; margin-top: 30px; text-align: center; border-top: 1px solid #e9ecef; padding-top: 20px;">
+              <p style="color: #777; font-size: 13px; margin-top: 30px; text-align: center; border-top: 1px solid #e9ecef; padding-top: 20px;">
                 If you have any questions, feel free to reply to this email.<br><br>
-                Thank you again from the <strong>Wordflower Team</strong>!
+                Thank you again from the <strong>TRACE Research Team</strong>!
               </p>
             </div>
           </div>

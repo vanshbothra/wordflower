@@ -18,9 +18,8 @@ export function middleware(request: NextRequest) {
   // Check for consent first (required for all main routes except /info)
   if (isConsentRequiredRoute) {
     const consentGiven = request.cookies.get('wordflower_consent')?.value
-    
+
     if (!consentGiven) {
-      // Redirect to info page if no consent found
       return NextResponse.redirect(new URL('/info', request.url))
     }
   }
@@ -34,8 +33,7 @@ export function middleware(request: NextRequest) {
     const userId = request.cookies.get('wordflower_user_id')?.value
     
     if (!userId) {
-      // Redirect to signin if no user_id found
-      return NextResponse.redirect(new URL('/signin', request.url))
+      return NextResponse.redirect(new URL('/info', request.url))
     }
   }
 

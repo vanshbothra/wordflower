@@ -9,14 +9,6 @@ import { Star, Brain, BookOpen, Trash2, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import { Toaster } from "@/components/ui/sonner"
 
-interface GameData {
-  gameId: string
-  centerLetter: string
-  outerLetters: string[]
-  wordCount: number
-  pangramCount: number
-}
-
 interface WordHint {
   word: string
   relatedWord: string
@@ -61,7 +53,7 @@ function ResultsPageContent() {
   const [error, setError] = useState<string | null>(null)
 
   // Feedback state
-  const [existingFeedback, setExistingFeedback] = useState<GameFeedback | null>(null)
+
   const [feedbackForm, setFeedbackForm] = useState<FeedbackForm>({
     satisfaction: 0,
     mostDifficult: '',
@@ -142,14 +134,12 @@ function ResultsPageContent() {
       if (response.ok) {
         const data = await response.json()
         if (data.feedback) {
-          setExistingFeedback(data.feedback)
           setFeedbackSubmitted(true)
           // If feedback exists, fetch the results
           await fetchGameResults(userId, gameId)
         }
       } else if (response.status === 404) {
         // No feedback found - this is expected for new games
-        setExistingFeedback(null)
       } else {
         throw new Error(`HTTP ${response.status}`)
       }
@@ -271,7 +261,6 @@ function ResultsPageContent() {
     if (success) {
       toast.success("Thank you for your feedback!")
       setFeedbackSubmitted(true)
-      setExistingFeedback(feedback)
 
       // Now fetch the results since feedback is submitted
       if (userId && gameId) {
@@ -513,7 +502,7 @@ function ResultsPageContent() {
                 <div className="text-6xl mb-4">🎉</div>
                 <h3 className="text-xl font-semibold mb-2">Thank You!</h3>
                 <p className="text-muted-foreground mb-4">
-                  Thank you for submitting your feedback and participating in our study!
+                  Thank you for submitting your feedback and participating in the TRACE Research Project!
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Your responses help us improve the game experience for future players.

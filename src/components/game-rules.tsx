@@ -1,7 +1,11 @@
 import { Card } from "@/components/ui/card"
 import { Clock, Shuffle, Target, Star } from "lucide-react"
 
-export function GameRules(experimentType: number[]) {
+interface GameRulesProps {
+  experimentType: number[] | null
+}
+
+export function GameRules({ experimentType }: GameRulesProps) {
   return (
     <Card className="p-6">
       <h3 className="text-lg font-semibold flex items-center gap-1">
