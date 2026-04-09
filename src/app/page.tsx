@@ -288,7 +288,7 @@ export default function WordflowerGame() {
   }, [])
 
   useEffect(() => {
-    if (gameState === 'playing' && !(experimentType?.includes(1) && showBreakModal)) {
+    if (gameState === 'playing' && isTabVisible && !(experimentType?.includes(1) && showBreakModal)) {
       const id = setInterval(() => {
         setTimer((prev) => {
           if (prev <= 1) {
@@ -305,56 +305,50 @@ export default function WordflowerGame() {
       clearInterval(intervalId)
       setIntervalId(null)
     }
-  }, [gameState, isTabVisible, showBreakModal])
+  }, [gameState, isTabVisible, showBreakModal, experimentType])
 
   // Countdown timeSinceWord during gameplay (not during break)
   useEffect(() => {
-    if (!experimentType?.includes(1) || gameState !== 'playing' || showBreakModal) return
+    if (!experimentType?.includes(1) || gameState !== 'playing' || showBreakModal || !isTabVisible) return
 
     const id = setInterval(() => {
-      setTimeSinceWord((prev) => {
-        if (prev <= 1) {
-          // 2 minutes since last word found — trigger auto-break
-          // Only trigger if not already showing the modal
-          setShowBreakModal((current) => {
-            if (!current) {
-              const endTime = Date.now() + BREAK_TIME * 1000
-              breakEndTimeRef.current = endTime
-              setBreakTimer(BREAK_TIME)
+      setTimeSinceWord((prev) => Math.max(0, prev - 1))
+    }, 1000)
 
-              logAnalyticsEvent('auto_break_triggered', {
-                currentTime: getElapsedTime(),
-                wordsFound: foundWords.length
-              })
-              return true
-            }
-            return current
-          })
-          return 0
+    return () => clearInterval(id)
+  }, [gameState, showBreakModal, experimentType, isTabVisible])
+
+  // Trigger break modal when timeSinceWord reaches 0
+  useEffect(() => {
+    if (gameState === 'playing' && experimentType?.includes(1) && !showBreakModal && timeSinceWord === 0) {
+      setShowBreakModal(true)
+      const endTime = Date.now() + BREAK_TIME * 1000
+      breakEndTimeRef.current = endTime
+      setBreakTimer(BREAK_TIME)
+
+      logAnalyticsEvent('auto_break_triggered', {
+        currentTime: 30 * 60 - timerRef.current,
+        wordsFound: wordsFoundRef.current
+      })
+    }
+  }, [timeSinceWord, showBreakModal, gameState, experimentType, logAnalyticsEvent])
+
+  // Break timer countdown while break modal is open
+  useEffect(() => {
+    if (!experimentType?.includes(1) || !showBreakModal || !isTabVisible) return
+
+    const id = setInterval(() => {
+      setBreakTimer((prev) => {
+        const next = Math.max(0, prev - 1)
+        if (next <= 0) {
+          clearInterval(id)
         }
-        return prev - 1
+        return next
       })
     }, 1000)
 
     return () => clearInterval(id)
-  }, [gameState, showBreakModal])
-
-  // Break timer countdown while break modal is open
-  useEffect(() => {
-    if (!experimentType?.includes(1) || !showBreakModal || !breakEndTimeRef.current) return
-
-    const id = setInterval(() => {
-      const now = Date.now()
-      const remaining = Math.max(0, Math.ceil((breakEndTimeRef.current! - now) / 1000))
-      setBreakTimer(remaining)
-
-      if (remaining <= 0) {
-        clearInterval(id)
-      }
-    }, 500) // Update more frequently for smoothness
-
-    return () => clearInterval(id)
-  }, [showBreakModal])
+  }, [showBreakModal, experimentType, isTabVisible])
 
   // Tab visibility handling
   useEffect(() => {

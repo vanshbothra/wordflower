@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dial
 import { DialogHeader } from "./ui/dialog"
 import { SpotTheDifference } from "./spot-the-difference"
 import { useEffect, useRef } from "react"
+import { toast } from "sonner"
 
 type BreakModalProps = {
     isOpen: boolean
@@ -22,6 +23,15 @@ export function BreakModal({ isOpen, setIsOpen, breakTimer, setTimeSinceWord, sp
             document.body.style.overflow = 'auto';
         }
     }, [isOpen])
+
+    useEffect(() => {
+        if (isOpen && breakTimer === 0) {
+            setIsOpen(false)
+            setTimeSinceWord(BREAK_THRESHOLD)
+            onResume(answersRef.current)
+            toast.info("Please continue playing!")
+        }
+    }, [breakTimer, isOpen, setIsOpen, setTimeSinceWord, onResume])
 
     return (
         isOpen && (
