@@ -47,6 +47,10 @@ interface SavedGameState {
   outerLetters: string[]
   wordCount: number
   pangramCount: number
+  showBreakModal?: boolean
+  breakTimer?: number
+  timeSinceWord?: number
+  spotRoundIndex?: number
 }
 
 // Feedback form interface
@@ -256,7 +260,11 @@ export default function WordflowerGame() {
       centerLetter: gameData.centerLetter,
       outerLetters: gameData.outerLetters,
       wordCount: gameData.wordCount,
-      pangramCount: gameData.pangramCount
+      pangramCount: gameData.pangramCount,
+      showBreakModal,
+      breakTimer,
+      timeSinceWord,
+      spotRoundIndex
     }
 
     try {
@@ -264,7 +272,7 @@ export default function WordflowerGame() {
     } catch (error) {
       console.error('Failed to save game:', error)
     }
-  }, [gameData, foundWords, foundPangrams, currentHintWordIndex, hintLevel, timer, gameState, currentWord])
+  }, [gameData, foundWords, foundPangrams, currentHintWordIndex, hintLevel, timer, gameState, currentWord, showBreakModal, breakTimer, timeSinceWord, spotRoundIndex])
 
   const loadGameFromStorage = useCallback((): SavedGameState | null => {
     if (typeof window === "undefined") return null
@@ -754,6 +762,10 @@ export default function WordflowerGame() {
     setGameState(saved.gameState)
     setCurrentWord(saved.currentWord)
     setShowStartModal(false)
+    setShowBreakModal(saved.showBreakModal || false)
+    setBreakTimer(saved.breakTimer ?? BREAK_TIME)
+    setTimeSinceWord(saved.timeSinceWord ?? BREAK_THRESHOLD)
+    setSpotRoundIndex(saved.spotRoundIndex ?? 0)
 
     if (savedGame) {
       // Log game resume event
