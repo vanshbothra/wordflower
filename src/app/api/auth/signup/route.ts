@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const collection = await getCollection('requests')
+    const collection = await getCollection('thesis_requests')
     const usersCollection = await getCollection('thesis_users')
 
     // Check if email already exists in requests
@@ -205,7 +205,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const email = searchParams.get('email')
 
-    const collection = await getCollection('requests')
+    const collection = await getCollection('thesis_requests')
 
     if (email) {
       // Get specific request by email
