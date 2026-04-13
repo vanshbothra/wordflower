@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { Toaster } from "@/components/ui/sonner"
 import Image from "next/image"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { InfoIcon } from "lucide-react"
 
 function SignInForm() {
   const router = useRouter()
@@ -97,10 +99,23 @@ function SignInForm() {
 
         <div className="bg-card p-6 rounded-lg border shadow-sm">
           <form onSubmit={handleSignIn} className="space-y-4">
-            <div>
-              <label htmlFor="userId" className="block text-sm font-medium mb-2">
-                Participant Code
-              </label>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <label htmlFor="userId" className="block text-sm font-medium">
+                  Participant Code
+                </label>
+                <Tooltip >
+                  <TooltipTrigger asChild>
+                    <InfoIcon
+                      size={16}
+                      color="grey"
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent side='right'>
+                    <p>Your participant code is sent to the email you registered with</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
               <input
                 id="userId"
                 type="text"
@@ -136,7 +151,6 @@ function SignInForm() {
           </div>
         </div>
       </div>
-
       <Toaster />
     </div>
   )
