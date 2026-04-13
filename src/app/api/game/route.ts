@@ -73,5 +73,5 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Game not found' }, { status: 404 })
   }
 
-  return NextResponse.json(game.words)
+  return NextResponse.json([...game.words, ...game.pangrams])
 }
