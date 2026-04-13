@@ -2870,11 +2870,33 @@
       ]
     },
     {
+      "word": "CRANIAL",
+      "relatedWord": "of or relating to the skull or cranium",
+      "synonym": "cephalic",
+      "phrase": "the ______ cavity",
+      "fillInBlank": "C_____L",
+      "blankLetters": [
+        1,
+        5
+      ]
+    },
+    {
       "word": "LAIR",
       "relatedWord": "a place where a person goes to hide or to avoid others",
       "synonym": "concealment",
       "phrase": "while he was on the road, he used the back compartment of his lorry as his ______",
       "fillInBlank": "L__R",
+      "blankLetters": [
+        1,
+        2
+      ]
+    },
+    {
+      "word": "NARC",
+      "relatedWord": "a person who investigates or informs on the use of illegal drugs",
+      "synonym": "informer",
+      "phrase": "the gang began to suspect that the new recruit was actually a ______",
+      "fillInBlank": "N__C",
       "blankLetters": [
         1,
         2
@@ -2900,6 +2922,50 @@
       "blankLetters": [
         1,
         3
+      ]
+    },
+    {
+      "word": "CIRRI",
+      "relatedWord": "slender, wispy clouds that form at high altitudes",
+      "synonym": "tendrils",
+      "phrase": "the clear blue sky was streaked with white ______ that looked like tufts of hair",
+      "fillInBlank": "C___I",
+      "blankLetters": [
+        1,
+        3
+      ]
+    },
+    {
+      "word": "ARCANA",
+      "relatedWord": "secrets or mysterious knowledge known only to a few",
+      "synonym": "mysteries",
+      "phrase": "the old library was filled with dusty scrolls detailing the ______ of ancient alchemy",
+      "fillInBlank": "A____A",
+      "blankLetters": [
+        1,
+        4
+      ]
+    },
+    {
+      "word": "RAILCAR",
+      "relatedWord": "a vehicle used for carrying passengers or freight on a railway",
+      "synonym": "carriage",
+      "phrase": "the locomotive was powerful enough to pull more than fifty ______s across the plains",
+      "fillInBlank": "R_____R",
+      "blankLetters": [
+        1,
+        5
+      ]
+    },
+    {
+      "word": "ARANCINI",
+      "relatedWord": "fried rice balls that are typically stuffed and coated with breadcrumbs",
+      "synonym": "croquette",
+      "phrase": "as an appetizer, we ordered the golden-brown ______ stuffed with ragu and mozzarella",
+      "fillInBlank": "A______I",
+      "blankLetters": [
+        1,
+        6
       ]
     },
     {
@@ -2958,6 +3024,17 @@
       ]
     },
     {
+      "word": "PLANAR",
+      "relatedWord": "relating to, or lying in a flat, two-dimensional surface",
+      "synonym": "flat",
+      "phrase": "the architect explained that the building's facade consisted of several ______ surfaces joined at sharp angles",
+      "fillInBlank": "P____R",
+      "blankLetters": [
+        1,
+        4
+      ]
+    },
+    {
       "word": "CARNAL",
       "relatedWord": "having to do with life on earth especially as opposed to that in heaven",
       "synonym": "earthborn",
@@ -2980,10 +3057,43 @@
       ]
     },
     {
+      "word": "CARPAL",
+      "relatedWord": "relating to the bones of the wrist",
+      "synonym": "wrist-joint",
+      "phrase": "after spending hours typing at her desk, she began to feel a dull ache in her ______ tunnel",
+      "fillInBlank": "C____L",
+      "blankLetters": [
+        1,
+        4
+      ]
+    },
+    {
       "word": "CARP",
-      "relatedWord": "an expression of dissatisfaction, pain, or resentment",
-      "synonym": "beef",
-      "phrase": "the usual ______ about that restaurant is that the service is slow",
+      "relatedWord": "a large freshwater fish often found in ponds and slow-moving rivers",
+      "synonym": "minnow",
+      "phrase": "the old pond was famous for the giant golden ______ that would swim near the surface at dawn",
+      "fillInBlank": "C__P",
+      "blankLetters": [
+        1,
+        2
+      ]
+    },
+    {
+      "word": "RICIN",
+      "relatedWord": "a highly toxic protein obtained from the castor bean",
+      "synonym": "toxin",
+      "phrase": "the spy's umbrella was modified to deliver a lethal dose of ______ with a single prick",
+      "fillInBlank": "R___N",
+      "blankLetters": [
+        1,
+        3
+      ]
+    },
+    {
+      "word": "CRAP",
+      "relatedWord": "something of extremely poor quality or complete nonsense",
+      "synonym": "rubbish",
+      "phrase": "don't believe a word he says; it's all a load of total ______",
       "fillInBlank": "C__P",
       "blankLetters": [
         1,

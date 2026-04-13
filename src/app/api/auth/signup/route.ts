@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
         `
         // const fromHeader = `Wordflower Study <${mailUser}>`;
         await transporter.sendMail({
-          from: `Wordflower Study <${mailUser}>`,
+          from: `TRACE Research Project <${mailUser}>`,
           to: signupRequest.email,
           cc: adminEmails,
           subject,
