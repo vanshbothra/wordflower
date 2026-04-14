@@ -6,8 +6,8 @@ interface GameFeedback {
   satisfaction: number
   mostDifficult: string
   improvementSuggestion: string
-  breakHelpful: string
-  stuckStrategy: string
+  breakHelpful?: string
+  stuckStrategy?: string
   submittedAt: Date
 }
 
@@ -28,9 +28,7 @@ export async function POST(request: NextRequest) {
     if (
       satisfaction === undefined ||
       !mostDifficult ||
-      !improvementSuggestion ||
-      !breakHelpful ||
-      !stuckStrategy
+      !improvementSuggestion
     ) {
       return NextResponse.json(
         { error: 'Missing required fields inside feedback' },
@@ -47,10 +45,8 @@ export async function POST(request: NextRequest) {
       mostDifficult.trim() === '' ||
       typeof improvementSuggestion !== 'string' ||
       improvementSuggestion.trim() === '' ||
-      typeof breakHelpful !== 'string' ||
-      breakHelpful.trim() === '' ||
-      typeof stuckStrategy !== 'string' ||
-      stuckStrategy.trim() === ''
+      (breakHelpful !== undefined && (typeof breakHelpful !== 'string' || breakHelpful.trim() === '')) ||
+      (stuckStrategy !== undefined && (typeof stuckStrategy !== 'string' || stuckStrategy.trim() === ''))
     ) {
       return NextResponse.json(
         { error: 'Invalid feedback data structure' },
@@ -64,8 +60,8 @@ export async function POST(request: NextRequest) {
       satisfaction,
       mostDifficult: mostDifficult.trim(),
       improvementSuggestion: improvementSuggestion.trim(),
-      breakHelpful: breakHelpful.trim(),
-      stuckStrategy: stuckStrategy.trim(),
+      ...(breakHelpful !== undefined && { breakHelpful: breakHelpful.trim() }),
+      ...(stuckStrategy !== undefined && { stuckStrategy: stuckStrategy.trim() }),
       submittedAt: new Date()
     }
 
