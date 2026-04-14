@@ -247,12 +247,15 @@ function ResultsPageContent() {
 
     setIsSubmittingFeedback(true)
 
+    const breakHelpfulTrimmed = feedbackForm.breakHelpful?.trim()
+    const stuckStrategyTrimmed = feedbackForm.stuckStrategy?.trim()
+
     const feedback: GameFeedback = {
       satisfaction: feedbackForm.satisfaction,
       mostDifficult: feedbackForm.mostDifficult.trim(),
       improvementSuggestion: feedbackForm.improvementSuggestion?.trim(),
-      breakHelpful: feedbackForm.breakHelpful?.trim(),
-      stuckStrategy: feedbackForm.stuckStrategy?.trim(),
+      ...(breakHelpfulTrimmed ? { breakHelpful: breakHelpfulTrimmed } : {}),
+      ...(stuckStrategyTrimmed ? { stuckStrategy: stuckStrategyTrimmed } : {}),
       submittedAt: new Date()
     }
 
