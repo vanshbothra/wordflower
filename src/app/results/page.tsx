@@ -334,13 +334,18 @@ function ResultsPageContent() {
 
   // Check if feedback form is valid
   const isFeedbackFormValid = () => {
-    return (
+    const baseValid =
       feedbackForm.satisfaction > 0 &&
       feedbackForm.mostDifficult.trim() !== '' &&
-      feedbackForm.improvementSuggestion?.trim() !== '' &&
-      feedbackForm.breakHelpful?.trim() !== '' &&
-      feedbackForm.stuckStrategy?.trim() !== ''
-    )
+      feedbackForm.improvementSuggestion?.trim() !== '';
+
+    if (experimentType?.includes(1)) {
+      return baseValid &&
+        feedbackForm.breakHelpful?.trim() !== '' &&
+        feedbackForm.stuckStrategy?.trim() !== '';
+    }
+
+    return baseValid;
   }
 
   // Format timer display
