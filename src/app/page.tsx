@@ -320,7 +320,10 @@ export default function WordflowerGame() {
     if (!experimentType?.includes(1) || gameState !== 'playing' || showBreakModal || !isTabVisible) return
 
     const id = setInterval(() => {
-      setTimeSinceWord((prev) => Math.max(0, prev - 1))
+      setTimeSinceWord((prev) => {
+        if (prev === -1) return -1
+        return Math.max(0, prev - 1)
+      })
     }, 1000)
 
     return () => clearInterval(id)
@@ -979,7 +982,7 @@ export default function WordflowerGame() {
       if (result.isValid) {
         setCurrentWord("")
         setFoundWords((prev) => [...prev, lowerWord])
-        setTimeSinceWord(BREAK_THRESHOLD)
+        setTimeSinceWord((prev) => prev === -1 ? -1 : BREAK_THRESHOLD)
 
         // Track pangrams separately
         if (result.isPangram) {

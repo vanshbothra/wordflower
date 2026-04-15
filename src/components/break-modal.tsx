@@ -1,8 +1,6 @@
 import { BREAK_THRESHOLD, formatTime } from "@/lib/utils"
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog"
-import { DialogHeader } from "./ui/dialog"
 import { SpotTheDifference } from "./spot-the-difference"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 type BreakModalProps = {
@@ -17,6 +15,7 @@ type BreakModalProps = {
 
 export function BreakModal({ isOpen, setIsOpen, breakTimer, setTimeSinceWord, spotRoundIndex, onSpotRoundIndexChange, onResume }: BreakModalProps) {
     const answersRef = useRef<Record<string, string[]>>({})
+    const [isSpotGameComplete, setIsSpotGameComplete] = useState(false)
 
     useEffect(() => {
         if (isOpen) {
@@ -27,11 +26,11 @@ export function BreakModal({ isOpen, setIsOpen, breakTimer, setTimeSinceWord, sp
     useEffect(() => {
         if (isOpen && breakTimer === 0) {
             setIsOpen(false)
-            setTimeSinceWord(BREAK_THRESHOLD)
+            setTimeSinceWord(isSpotGameComplete ? -1 : BREAK_THRESHOLD)
             onResume(answersRef.current)
             toast.info("Please continue playing!")
         }
-    }, [breakTimer, isOpen, setIsOpen, setTimeSinceWord, onResume])
+    }, [breakTimer, isOpen, setIsOpen, setTimeSinceWord, onResume, isSpotGameComplete])
 
     return (
         isOpen && (
@@ -43,8 +42,11 @@ export function BreakModal({ isOpen, setIsOpen, breakTimer, setTimeSinceWord, sp
       min-h-[600px] w-[95vw] max-w-[1200px]
       max-h-[90vh] overflow-auto p-6"
                 >
-                    <div className="mb-4">
-                        <h2 className="text-lg font-semibold">Take a break!</h2>
+                    <div className="mb-5 gap-1 flex flex-row justify-between items-center">
+                        <div>
+                            <h1 className="text-xl font-semibold">Take a break</h1>
+                            <h2 className="text-sm ">Please don't worry about your performance here. If you are done with a round, you can move on to the next one!</h2>
+                        </div>
                         <p className="text-sm text-muted-foreground">
                             {formatTime(breakTimer)}
                         </p>
@@ -59,22 +61,23 @@ export function BreakModal({ isOpen, setIsOpen, breakTimer, setTimeSinceWord, sp
                             onAnswersChange={(answers) => {
                                 answersRef.current = answers
                             }}
+                            onCompleteStatusChange={setIsSpotGameComplete}
                             disabled={breakTimer === 0}
                         />
 
                         {/* Resume button */}
                         <button
-                            disabled={breakTimer > 0}
+                            disabled={breakTimer > 0 && !isSpotGameComplete}
                             onClick={() => {
                                 setIsOpen(false)
-                                setTimeSinceWord(BREAK_THRESHOLD)
+                                setTimeSinceWord(isSpotGameComplete ? -1 : BREAK_THRESHOLD)
                                 onResume(answersRef.current)
                             }}
                             className="inline-flex items-center justify-center rounded-md text-sm font-medium
           bg-primary text-primary-foreground hover:bg-primary/90
           h-10 px-6 w-full disabled:opacity-50 disabled:pointer-events-none"
                         >
-                            {breakTimer > 0 ? "Please wait..." : "Resume Game"}
+                            {breakTimer > 0 && !isSpotGameComplete ? "Please wait..." : "Resume Game"}
                         </button>
 
                     </div>

@@ -1,14 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const ROUNDS = [
-    { id: 1, label: "Round 1", imageA: '/spot-the-difference/1a.png', imageB: '/spot-the-difference/1b.png' },
-    { id: 2, label: "Round 2", imageA: '/spot-the-difference/2a.png', imageB: '/spot-the-difference/2b.png' },
-    { id: 3, label: "Round 3", imageA: '/spot-the-difference/3a.png', imageB: '/spot-the-difference/3b.png' },
-    { id: 4, label: "Round 4", imageA: '/spot-the-difference/4a.png', imageB: '/spot-the-difference/4b.png' },
+    { id: 1, label: "Round 1", imageA: '/spot-the-difference/1a.jpg', imageB: '/spot-the-difference/1b.jpg' },
+    { id: 2, label: "Round 2", imageA: '/spot-the-difference/2a.jpg', imageB: '/spot-the-difference/2b.jpg' },
+    { id: 3, label: "Round 3", imageA: '/spot-the-difference/3a.jpg', imageB: '/spot-the-difference/3b.jpg' },
+    { id: 4, label: "Round 4", imageA: '/spot-the-difference/4a.jpg', imageB: '/spot-the-difference/4b.jpg' },
+    { id: 5, label: "Round 5", imageA: '/spot-the-difference/5a.png', imageB: '/spot-the-difference/5b.png' },
+    { id: 6, label: "Round 6", imageA: '/spot-the-difference/2a.png', imageB: '/spot-the-difference/2b.png' },
 ]
 
 const NUM_DIFFERENCES = 4
@@ -18,10 +20,11 @@ interface SpotTheDifferenceProps {
     initialIndex?: number
     onIndexChange?: (index: number) => void
     onAnswersChange?: (allAnswers: Record<string, string[]>) => void
+    onCompleteStatusChange?: (isComplete: boolean) => void
     disabled: boolean
 }
 
-export function SpotTheDifference({ onComplete, initialIndex = 0, onIndexChange, onAnswersChange, disabled }: SpotTheDifferenceProps) {
+export function SpotTheDifference({ onComplete, initialIndex = 0, onIndexChange, onAnswersChange, onCompleteStatusChange, disabled }: SpotTheDifferenceProps) {
     const [currentIndex, setCurrentIndex] = useState(() => {
         if (typeof window !== "undefined") {
             const saved = localStorage.getItem("wordflower_spot_index")
@@ -49,6 +52,10 @@ export function SpotTheDifference({ onComplete, initialIndex = 0, onIndexChange,
     const allFilled = currentAnswers.every((a) => a.trim().length > 0)
     const isLast = currentIndex === ROUNDS.length - 1
     const isFirst = currentIndex === 0
+
+    useEffect(() => {
+        onCompleteStatusChange?.(allFilled && isLast)
+    }, [allFilled, isLast, onCompleteStatusChange])
 
     function handleAnswerChange(inputIdx: number, value: string) {
         setAnswers((prev) => {
@@ -95,8 +102,10 @@ export function SpotTheDifference({ onComplete, initialIndex = 0, onIndexChange,
     }
 
     return (
+
         <div className="w-full flex flex-row gap-4">
             {/* Carousel header */}
+
             <div className="flex flex-col gap-4 w-[60%]">
                 <div className="flex items-center justify-between">
                     <button
@@ -158,16 +167,15 @@ export function SpotTheDifference({ onComplete, initialIndex = 0, onIndexChange,
                         />
                     </div>
                 ))}
+                {
+                    allFilled && isLast && (
+                        <p className="text-xs text-center text-green-600 dark:text-green-400 font-medium">
+                            🎉 Great job! You spotted them all.
+                        </p>
+                    )
+                }
             </div>
 
-
-            {
-                allFilled && isLast && (
-                    <p className="text-xs text-center text-green-600 dark:text-green-400 font-medium">
-                        🎉 Great job! You spotted them all.
-                    </p>
-                )
-            }
         </div >
     )
 }
