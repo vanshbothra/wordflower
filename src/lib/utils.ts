@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 export const BREAK_THRESHOLD = 5 * 60
-export const BREAK_TIME = 5 * 60
+export const BREAK_TIME = 3 * 60
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
