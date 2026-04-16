@@ -637,10 +637,7 @@
       "synonym": "allow",
       "phrase": "I ______ it fitting that we mark this solemn occasion with a day of prayer and thanksgiving",
       "fillInBlank": "D__M",
-      "blankLetters": [
-        1,
-        2
-      ]
+      "blankLetters": [1, 2]
     },
     {
       "word": "DEEMED",
@@ -648,10 +645,7 @@
       "synonym": "allowed",
       "phrase": "I ______ it fitting that we mark this solemn occasion with a day of prayer and thanksgiving",
       "fillInBlank": "D____D",
-      "blankLetters": [
-        1,
-        4
-      ]
+      "blankLetters": [1, 4]
     },
     {
       "word": "DEEMING",
@@ -659,10 +653,15 @@
       "synonym": "allowing",
       "phrase": "I ______ it fitting that we mark this solemn occasion with a day of prayer and thanksgiving",
       "fillInBlank": "D_____G",
-      "blankLetters": [
-        1,
-        5
-      ]
+      "blankLetters": [1, 5]
+    },
+    {
+      "word": "DENIM",
+      "relatedWord": "a sturdy twilled cotton fabric used especially for jeans and workwear",
+      "synonym": "jeans",
+      "phrase": "she wore a pair of ______ overalls to work on the farm",
+      "fillInBlank": "D___M",
+      "blankLetters": [1, 3]
     },
     {
       "word": "DIME",
@@ -670,208 +669,183 @@
       "synonym": "chicken feed",
       "phrase": "the beauty of this deal is that all the extras won't cost you a ______",
       "fillInBlank": "D__E",
-      "blankLetters": [
-        1,
-        2
-      ]
+      "blankLetters": [1, 2]
     },
     {
       "word": "DIMMED",
       "relatedWord": "being without light or without much light",
-      "synonym": "black",
-      "phrase": "a ______ lounge where students like to rest and sleep",
+      "synonym": "darkened",
+      "phrase": "the lights ______ as the curtain rose on the opening scene",
       "fillInBlank": "D____D",
-      "blankLetters": [
-        1,
-        4
-      ]
+      "blankLetters": [1, 4]
     },
     {
       "word": "DIMMING",
       "relatedWord": "to make dark, dim, or indistinct",
-      "synonym": "beclouding",
+      "synonym": "fading",
       "phrase": "the storm clouds ______ our view of the city from the airplane",
       "fillInBlank": "D_____G",
-      "blankLetters": [
-        1,
-        5
-      ]
+      "blankLetters": [1, 5]
     },
     {
-      "word": "EMEND",
-      "relatedWord": "to remove errors, defects, deficiencies, or deviations from",
-      "synonym": "amend",
-      "phrase": "the first printout quickly revealed that our computer program needed to be ______",
-      "fillInBlank": "E___D",
-      "blankLetters": [
-        1,
-        3
-      ]
+      "word": "GIMME",
+      "relatedWord": "something given or obtained very easily",
+      "synonym": "freebie",
+      "phrase": "that first question on the exam is a total ______ — everyone should get it right",
+      "fillInBlank": "G___E",
+      "blankLetters": [1, 3]
     },
     {
-      "word": "EMENDED",
-      "relatedWord": "to remove errors, defects, deficiencies, or deviations from",
-      "synonym": "amended",
-      "phrase": "the first printout quickly revealed that our computer program needed to be ______",
-      "fillInBlank": "E_____D",
-      "blankLetters": [
-        1,
-        5
-      ]
+      "word": "IDEM",
+      "relatedWord": "something previously mentioned; the same as before",
+      "synonym": "same",
+      "phrase": "the second citation referred to ______ — the same source used just above",
+      "fillInBlank": "I__M",
+      "blankLetters": [1, 2]
     },
     {
-      "word": "EMENDING",
-      "relatedWord": "to remove errors, defects, deficiencies, or deviations from",
-      "synonym": "amending",
-      "phrase": "the first printout quickly revealed that our computer program needed to be ______",
-      "fillInBlank": "E______G",
-      "blankLetters": [
-        1,
-        6
-      ]
-    },
-    {
-      "word": "LIMN",
-      "relatedWord": "to give a representation or account of in words",
-      "synonym": "delineate",
-      "phrase": "he ______ the scene in the courtroom so perfectly I could practically see it",
-      "fillInBlank": "L__N",
-      "blankLetters": [
-        1,
-        2
-      ]
-    },
-    {
-      "word": "LIMNED",
-      "relatedWord": "to give a representation or account of in words",
-      "synonym": "delineated",
-      "phrase": "he ______ the scene in the courtroom so perfectly I could practically see it",
-      "fillInBlank": "L____D",
-      "blankLetters": [
-        1,
-        4
-      ]
-    },
-    {
-      "word": "LIMNING",
-      "relatedWord": "to give a representation or account of in words",
-      "synonym": "delineating",
-      "phrase": "he ______ the scene in the courtroom so perfectly I could practically see it",
+      "word": "LEMMING",
+      "relatedWord": "a small rodent associated with blindly following the crowd",
+      "synonym": "follower",
+      "phrase": "the employees followed the disastrous policy like ______ rushing toward a cliff",
       "fillInBlank": "L_____G",
-      "blankLetters": [
-        1,
-        5
-      ]
+      "blankLetters": [1, 5]
+    },
+    {
+      "word": "LIME",
+      "relatedWord": "a small green citrus fruit with a sharp sour taste",
+      "synonym": "citrus",
+      "phrase": "squeeze a wedge of ______ over the fish tacos before eating",
+      "fillInBlank": "L__E",
+      "blankLetters": [1, 2]
+    },
+    {
+      "word": "LIMED",
+      "relatedWord": "treated with lime to reduce acidity or improve soil",
+      "synonym": "treated",
+      "phrase": "the farmer ______ the fields each spring before planting",
+      "fillInBlank": "L___D",
+      "blankLetters": [1, 3]
+    },
+    {
+      "word": "LIMING",
+      "relatedWord": "the application of lime to soil or other surfaces",
+      "synonym": "treating",
+      "phrase": "______ the soil helps neutralize acidity and promotes healthy crop growth",
+      "fillInBlank": "L____G",
+      "blankLetters": [1, 4]
+    },
+    {
+      "word": "LINEMEN",
+      "relatedWord": "workers who install or maintain electrical or telephone lines",
+      "synonym": "crew",
+      "phrase": "after the storm knocked out power, ______ worked through the night to restore electricity",
+      "fillInBlank": "L_____N",
+      "blankLetters": [1, 5]
     },
     {
       "word": "MEDDLE",
       "relatedWord": "to interest oneself in what is not one's concern",
-      "synonym": "butt in",
+      "synonym": "interfere",
       "phrase": "please stop ______ in your sister's marriage, even though you mean well",
       "fillInBlank": "M____E",
-      "blankLetters": [
-        1,
-        4
-      ]
+      "blankLetters": [1, 4]
     },
     {
       "word": "MEDDLED",
       "relatedWord": "to interest oneself in what is not one's concern",
-      "synonym": "butted in",
-      "phrase": "please stop ______ in your sister's marriage, even though you mean well",
+      "synonym": "interfered",
+      "phrase": "she ______ in the dispute and only made things worse",
       "fillInBlank": "M_____D",
-      "blankLetters": [
-        1,
-        5
-      ]
+      "blankLetters": [1, 5]
     },
     {
       "word": "MEDDLING",
       "relatedWord": "thrusting oneself where one is not welcome or invited",
-      "synonym": "busy",
+      "synonym": "prying",
       "phrase": "the bride's parents promised that they would never be ______ in-laws",
       "fillInBlank": "M______G",
-      "blankLetters": [
-        1,
-        6
-      ]
+      "blankLetters": [1, 6]
     },
     {
       "word": "MELD",
       "relatedWord": "a distinct entity formed by the combining of two or more different things",
-      "synonym": "admixture",
-      "phrase": "her music is a ______ of various styles",
+      "synonym": "blend",
+      "phrase": "her music is a ______ of jazz, classical, and folk influences",
       "fillInBlank": "M__D",
-      "blankLetters": [
-        1,
-        2
-      ]
+      "blankLetters": [1, 2]
     },
     {
       "word": "MELDED",
       "relatedWord": "to turn into a single mass or entity that is more or less the same throughout",
-      "synonym": "amalgamated",
+      "synonym": "fused",
       "phrase": "a cuisine that ______ East and West into strikingly original flavor combinations",
       "fillInBlank": "M____D",
-      "blankLetters": [
-        1,
-        4
-      ]
+      "blankLetters": [1, 4]
     },
     {
       "word": "MELDING",
       "relatedWord": "to turn into a single mass or entity that is more or less the same throughout",
-      "synonym": "amalgamating",
+      "synonym": "merging",
       "phrase": "a cuisine that ______ East and West into strikingly original flavor combinations",
       "fillInBlank": "M_____G",
-      "blankLetters": [
-        1,
-        5
-      ]
+      "blankLetters": [1, 5]
     },
     {
       "word": "MELEE",
       "relatedWord": "a rough and often noisy fight usually involving several people",
-      "synonym": "affray",
+      "synonym": "brawl",
       "phrase": "a verbal disagreement at the football game soon turned into a general ______ involving scores of spectators",
       "fillInBlank": "M___E",
-      "blankLetters": [
-        1,
-        3
-      ]
+      "blankLetters": [1, 3]
+    },
+    {
+      "word": "MEME",
+      "relatedWord": "an idea, image, or behavior that spreads rapidly through culture",
+      "synonym": "trend",
+      "phrase": "the photo became a viral ______ almost immediately after it was posted online",
+      "fillInBlank": "M__E",
+      "blankLetters": [1, 2]
     },
     {
       "word": "MEND",
       "relatedWord": "to put into good shape or working order again",
-      "synonym": "doctor",
+      "synonym": "repair",
       "phrase": "the old adage that only time can ______ a broken heart",
       "fillInBlank": "M__D",
-      "blankLetters": [
-        1,
-        2
-      ]
+      "blankLetters": [1, 2]
+    },
+    {
+      "word": "MENDED",
+      "relatedWord": "repaired or restored to good condition",
+      "synonym": "patched",
+      "phrase": "she carefully ______ the tear in the old quilt with a needle and thread",
+      "fillInBlank": "M____D",
+      "blankLetters": [1, 4]
     },
     {
       "word": "MENDING",
       "relatedWord": "the process or period of gradually regaining one's health and strength",
-      "synonym": "comeback",
+      "synonym": "healing",
       "phrase": "it was a long slow ______ of his injuries from the car crash, but he's fine now",
       "fillInBlank": "M_____G",
-      "blankLetters": [
-        1,
-        5
-      ]
+      "blankLetters": [1, 5]
+    },
+    {
+      "word": "MIDDEN",
+      "relatedWord": "a prehistoric refuse heap consisting of shells and food remnants",
+      "synonym": "refuse heap",
+      "phrase": "archaeologists sifting through the ancient ______ found fragments of pottery and bone tools",
+      "fillInBlank": "M____N",
+      "blankLetters": [1, 4]
     },
     {
       "word": "MIDDLE",
       "relatedWord": "a middle point between extremes",
-      "synonym": "golden mean",
+      "synonym": "center",
       "phrase": "I'm right in the ______ of a tax audit, so can you come back later?",
       "fillInBlank": "M____E",
-      "blankLetters": [
-        1,
-        4
-      ]
+      "blankLetters": [1, 4]
     },
     {
       "word": "MIDDLEMEN",
@@ -879,54 +853,55 @@
       "synonym": "brokers",
       "phrase": "the retired statesman is often asked to be a ______ in international disputes",
       "fillInBlank": "M_______N",
-      "blankLetters": [
-        1,
-        7
-      ]
+      "blankLetters": [1, 7]
     },
     {
       "word": "MIDDLING",
       "relatedWord": "being about midway between extremes of amount or size",
-      "synonym": "average",
+      "synonym": "mediocre",
       "phrase": "was disappointed in the renowned historian's latest book, which is only ______",
       "fillInBlank": "M______G",
-      "blankLetters": [
-        1,
-        6
-      ]
+      "blankLetters": [1, 6]
+    },
+    {
+      "word": "MIDGE",
+      "relatedWord": "a tiny gnat-like insect that swarms near water",
+      "synonym": "gnat",
+      "phrase": "clouds of ______ hovered above the still pond in the evening heat",
+      "fillInBlank": "M___E",
+      "blankLetters": [1, 3]
+    },
+    {
+      "word": "MIDI",
+      "relatedWord": "a skirt or coat reaching to mid-calf length",
+      "synonym": "midlength",
+      "phrase": "she chose a flowing ______ skirt for the outdoor summer concert",
+      "fillInBlank": "M__I",
+      "blankLetters": [1, 2]
     },
     {
       "word": "MIEN",
       "relatedWord": "the outward form of someone or something especially as indicative of a quality",
-      "synonym": "appearance",
+      "synonym": "demeanor",
       "phrase": "the friendly ______ of the librarian suggested that she was willing to offer any needed help",
       "fillInBlank": "M__N",
-      "blankLetters": [
-        1,
-        2
-      ]
+      "blankLetters": [1, 2]
     },
     {
       "word": "MILD",
       "relatedWord": "marked by temperatures that are neither too high nor too low",
-      "synonym": "balmy",
+      "synonym": "gentle",
       "phrase": "a quiet gentleman with a kindly soul and a ______ disposition",
       "fillInBlank": "M__D",
-      "blankLetters": [
-        1,
-        2
-      ]
+      "blankLetters": [1, 2]
     },
     {
       "word": "MILE",
-      "relatedWord": "a long distance",
-      "synonym": "afar",
+      "relatedWord": "a unit of distance equal to 5,280 feet",
+      "synonym": "distance",
       "phrase": "the recluse lived in a small cabin ______ away from his closest neighbor",
       "fillInBlank": "M__E",
-      "blankLetters": [
-        1,
-        2
-      ]
+      "blankLetters": [1, 2]
     },
     {
       "word": "MILL",
@@ -934,98 +909,79 @@
       "synonym": "factory",
       "phrase": "a steel ______ that remains the town's principal employer",
       "fillInBlank": "M__L",
-      "blankLetters": [
-        1,
-        2
-      ]
+      "blankLetters": [1, 2]
+    },
+    {
+      "word": "MILLED",
+      "relatedWord": "ground or processed in a mill",
+      "synonym": "ground",
+      "phrase": "freshly ______ flour makes a noticeably better loaf of bread",
+      "fillInBlank": "M____D",
+      "blankLetters": [1, 4]
     },
     {
       "word": "MILLING",
       "relatedWord": "to reduce to fine particles",
-      "synonym": "atomizing",
+      "synonym": "grinding",
       "phrase": "a demonstration of how dried kernels of corn were ______ in colonial times",
       "fillInBlank": "M_____G",
-      "blankLetters": [
-        1,
-        5
-      ]
+      "blankLetters": [1, 5]
     },
     {
       "word": "MIME",
-      "relatedWord": "an actor in a story performed silently and entirely by body movements",
+      "relatedWord": "an actor who performs silently and entirely by body movements",
       "synonym": "mimic",
       "phrase": "the speech-impaired patient had to convey his wishes with ______ or scribbled notes",
       "fillInBlank": "M__E",
-      "blankLetters": [
-        1,
-        2
-      ]
+      "blankLetters": [1, 2]
     },
     {
       "word": "MIMED",
-      "relatedWord": "to use (someone or something) as the model for one's speech, mannerisms, or behavior",
+      "relatedWord": "to use someone or something as the model for one's speech or behavior",
       "synonym": "aped",
       "phrase": "as a joke, Eric knelt by the dinner table and began ______ a dog begging for food",
       "fillInBlank": "M___D",
-      "blankLetters": [
-        1,
-        3
-      ]
+      "blankLetters": [1, 3]
     },
     {
       "word": "MIMING",
-      "relatedWord": "to use (someone or something) as the model for one's speech, mannerisms, or behavior",
-      "synonym": "aping",
+      "relatedWord": "to use someone or something as the model for one's speech or behavior",
+      "synonym": "imitating",
       "phrase": "as a joke, Eric knelt by the dinner table and began ______ a dog begging for food",
       "fillInBlank": "M____G",
-      "blankLetters": [
-        1,
-        4
-      ]
+      "blankLetters": [1, 4]
     },
     {
       "word": "MIND",
       "relatedWord": "the part of a person that feels, thinks, perceives, wills, and especially reasons",
-      "synonym": "brain",
+      "synonym": "intellect",
       "phrase": "call to ______ the events of last year",
       "fillInBlank": "M__D",
-      "blankLetters": [
-        1,
-        2
-      ]
+      "blankLetters": [1, 2]
     },
     {
       "word": "MINDED",
-      "relatedWord": "having a desire or inclination (as for a specified course of action)",
-      "synonym": "amenable",
+      "relatedWord": "having a desire or inclination for a specified course of action",
+      "synonym": "inclined",
       "phrase": "in most David vs. Goliath contests, people are generally ______ to side with the underdog",
       "fillInBlank": "M____D",
-      "blankLetters": [
-        1,
-        4
-      ]
+      "blankLetters": [1, 4]
     },
     {
       "word": "MINDING",
       "relatedWord": "to pay attention especially through the act of hearing",
-      "synonym": "attending",
+      "synonym": "heeding",
       "phrase": "______ the instructions that appear at the top of the first page of the exam",
       "fillInBlank": "M_____G",
-      "blankLetters": [
-        1,
-        5
-      ]
+      "blankLetters": [1, 5]
     },
     {
       "word": "MINE",
-      "relatedWord": "an abundant source",
-      "synonym": "argosy",
+      "relatedWord": "an underground excavation for extracting ore or minerals",
+      "synonym": "pit",
       "phrase": "the soldiers were careful to disarm any ______ they found in their path",
       "fillInBlank": "M__E",
-      "blankLetters": [
-        1,
-        2
-      ]
+      "blankLetters": [1, 2]
     },
     {
       "word": "MINED",
@@ -1033,32 +989,47 @@
       "synonym": "booby-trapped",
       "phrase": "the troops hurriedly ______ the field before relinquishing it to the enemy",
       "fillInBlank": "M___D",
-      "blankLetters": [
-        1,
-        3
-      ]
+      "blankLetters": [1, 3]
     },
     {
       "word": "MINGLE",
-      "relatedWord": "to turn into a single mass or entity that is more or less the same throughout",
-      "synonym": "amalgamate",
-      "phrase": "______ at a cocktail party",
+      "relatedWord": "to move among people and chat socially",
+      "synonym": "socialize",
+      "phrase": "she found it easy to ______ with strangers at the gallery opening",
       "fillInBlank": "M____E",
-      "blankLetters": [
-        1,
-        4
-      ]
+      "blankLetters": [1, 4]
+    },
+    {
+      "word": "MINGLED",
+      "relatedWord": "mixed or combined together",
+      "synonym": "blended",
+      "phrase": "the scent of pine and sea air ______ pleasantly on the morning breeze",
+      "fillInBlank": "M_____D",
+      "blankLetters": [1, 5]
+    },
+    {
+      "word": "MINGLING",
+      "relatedWord": "moving among people and socializing",
+      "synonym": "socializing",
+      "phrase": "she spent the evening ______ with guests and making new connections",
+      "fillInBlank": "M______G",
+      "blankLetters": [1, 6]
+    },
+    {
+      "word": "MINI",
+      "relatedWord": "something very small of its kind; a miniature version",
+      "synonym": "tiny",
+      "phrase": "she ordered a ______ of champagne to celebrate the small but meaningful victory",
+      "fillInBlank": "M__I",
+      "blankLetters": [1, 2]
     },
     {
       "word": "MINING",
-      "relatedWord": "to place hidden explosive devices in or under",
-      "synonym": "booby-trapping",
-      "phrase": "the troops hurriedly ______ the field before relinquishing it to the enemy",
+      "relatedWord": "the process of extracting minerals or ores from the earth",
+      "synonym": "excavating",
+      "phrase": "the town's history was built entirely on coal ______, and its decline followed the mine's closure",
       "fillInBlank": "M____G",
-      "blankLetters": [
-        1,
-        4
-      ]
+      "blankLetters": [1, 4]
     }
   ],
   "3": [
