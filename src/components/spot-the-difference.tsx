@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -25,6 +25,8 @@ interface SpotTheDifferenceProps {
 }
 
 export function SpotTheDifference({ onComplete, initialIndex = 0, onIndexChange, onAnswersChange, onCompleteStatusChange, disabled }: SpotTheDifferenceProps) {
+    const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+
     const [currentIndex, setCurrentIndex] = useState(() => {
         if (typeof window !== "undefined") {
             const saved = localStorage.getItem("wordflower_spot_index")
@@ -87,6 +89,9 @@ export function SpotTheDifference({ onComplete, initialIndex = 0, onIndexChange,
                 localStorage.setItem("wordflower_spot_index", next.toString())
             }
             onIndexChange?.(next)
+            setTimeout(() => {
+                inputRefs.current[0]?.focus()
+            }, 0)
         }
     }
 
@@ -153,10 +158,23 @@ export function SpotTheDifference({ onComplete, initialIndex = 0, onIndexChange,
                             {i + 1}.
                         </span>
                         <input
+                            ref={(el) => {
+                                inputRefs.current[i] = el
+                            }}
                             type="text"
                             autoFocus={false}
                             value={currentAnswers[i]}
                             onChange={(e) => handleAnswerChange(i, e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    e.preventDefault()
+                                    if (i < NUM_DIFFERENCES - 1) {
+                                        inputRefs.current[i + 1]?.focus()
+                                    } else {
+                                        handleNext()
+                                    }
+                                }
+                            }}
                             placeholder={`Difference ${i + 1}…`}
                             className={cn(
                                 "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm",
