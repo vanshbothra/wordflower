@@ -127,8 +127,8 @@ export default function SignUpPage() {
 
     // Age validation
     const age = parseInt(formData.age)
-    if (isNaN(age) || age < 16 || age > 100) {
-      toast.error("Please enter a valid age between 16 and 100")
+    if (isNaN(age) || age < 18 || age > 100) {
+      toast.error("Please enter a valid age between 18 and 100")
       return
     }
 
