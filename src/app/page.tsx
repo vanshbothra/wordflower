@@ -1048,7 +1048,7 @@ export default function WordflowerGame() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!gameData) return
+      if (!gameData || showBreakModal) return
 
       const key = e.key.toUpperCase()
       if (e.key === "Enter") {
@@ -1060,13 +1060,13 @@ export default function WordflowerGame() {
         handleClear()
       }
       //handle letter click only if key is between A-Z
-      else if (key.length === 1 && key >= 'A' && key <= 'Z' && !showBreakModal) {
+      else if (key.length === 1 && key >= 'A' && key <= 'Z') {
         handleLetterClick(key)
       }
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [gameData, currentWord, foundWords, handleSubmit])
+  }, [gameData, currentWord, foundWords, handleSubmit, showBreakModal])
 
   if (!gameData && gameState !== 'not-started') {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>
