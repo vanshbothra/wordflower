@@ -22,7 +22,7 @@ export function GameRules({ experimentType }: GameRulesProps) {
             <li>Each word must contain the center letter and be at least 4 letters long</li>
             <li>You can <b>repeat letters</b> as needed</li>
             <li>The gameplay session is capped at <strong>30 minutes</strong>. If the timer elapses, the game will save your progress and conclude automatically. However, if you feel you have exhausted your search, you may choose to end the session early by clicking the <strong>"End Game"</strong> button.</li>
-            {experimentType?.includes(1) && <li>You will be given a five minute break during the game in which you will have to perform a short task. Please do not worry about your performance during this task, it is only meant to serve as an activity during the break.</li>}
+            {experimentType?.includes(1) && <li>You will be given a three minute break during the game in which you will have to perform a short task. Please do not worry about your performance during this task, it is only meant to serve as an activity during the break.</li>}
             {experimentType?.includes(2) && <li>You may receive some hints as the game progresses. You can either dismiss the hint or try and find the associated word. Finding any word successfully will automatically dismiss the current hint.</li>}
             {/* <li>Each game has atleast one <strong>pangram</strong> - words that use all the letters!</li> */}
           </ul>
